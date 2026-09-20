@@ -1,0 +1,141 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  // If using Prisma 6, uncomment the line below:
+  // url      = env("DATABASE_URL")
+}
+
+// ---------------------------------------------------------------------------
+// Enums
+// ---------------------------------------------------------------------------
+
+enum Role {
+  CUSTOMER
+  PARTNER
+}
+
+enum OrderStatus {
+  PICKUP_REQUESTED
+  PICKED_UP
+  WASHING
+  OUT_FOR_DELIVERY
+  COMPLETED
+  CANCELLED
+}
+
+enum PricingUnit {
+  PER_KG
+  PER_ITEM
+}
+
+// ---------------------------------------------------------------------------
+// Models
+// ---------------------------------------------------------------------------
+
+model User {
+  id           Int          @id @default(autoincrement())
+  email        String       @unique
+  passwordHash String
+  name         String
+  phone        String?
+  role         Role         @default(CUSTOMER)
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  // Partner store relation (1-to-1)
+  laundromat   Laundromat?
+
+  // Customer relations
+  orders       Order[]
+  reviews      Review[]
+}
+
+model Laundromat {
+  id          Int                 @id @default(autoincrement())
+  name        String
+  description String?
+  address     String
+  latitude    Float
+  longitude   Float
+  imageUrl    String?
+  rating      Float               @default(0.0)
+  reviewCount Int                 @default(0)
+  isOpen      Boolean             @default(true)
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+
+  // Laundromat owner relation
+  ownerId     Int                 @unique
+  owner       User                @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+
+  // Associated relationships
+  tags        LaundromatsOnTags[]
+  services    LaundryService[]
+  reviews     Review[]
+  orders      Order[]
+}
+
+model LaundryService {
+  id           Int         @id @default(autoincrement())
+  name         String      // e.g., "Regular Kiloan", "Sneakers Deep Clean", "Leather Bag Spa"
+  description  String?
+  price        Float
+  unit         PricingUnit @default(PER_ITEM)
+  imageUrl     String?
+  createdAt    DateTime    @default(now())
+
+  laundromatId Int
+  laundromat   Laundromat  @relation(fields: [laundromatId], references: [id], onDelete: Cascade)
+}
+
+model Tag {
+  id          Int                 @id @default(autoincrement())
+  name        String              @unique // e.g., "shoes", "bags", "dolls", "costumes", "express", "kiloan"
+  laundromats LaundromatsOnTags[]
+}
+
+// Explicit Join Table for Many-to-Many relation between Laundromats and Tags
+model LaundromatsOnTags {
+  laundromatId Int
+  tagId        Int
+
+  laundromat   Laundromat @relation(fields: [laundromatId], references: [id], onDelete: Cascade)
+  tag          Tag        @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([laundromatId, tagId])
+}
+
+model Review {
+  id           Int        @id @default(autoincrement())
+  rating       Int        // Range: 1 to 5
+  comment      String?
+  createdAt    DateTime   @default(now())
+
+  userId       Int
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  laundromatId Int
+  laundromat   Laundromat @relation(fields: [laundromatId], references: [id], onDelete: Cascade)
+}
+
+model Order {
+  id              Int         @id @default(autoincrement())
+  pickupAddress   String
+  deliveryAddress String
+  serviceType     String      // Primary service selected or order summary
+  notes           String?
+  estimatedKg     Float?
+  totalPrice      Float?
+  status          OrderStatus @default(PICKUP_REQUESTED)
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  customerId      Int
+  customer        User        @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  laundromatId    Int
+  laundromat      Laundromat  @relation(fields: [laundromatId], references: [id], onDelete: Cascade)
+}
