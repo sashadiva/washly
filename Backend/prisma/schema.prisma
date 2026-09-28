@@ -4,8 +4,6 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  // If using Prisma 6, uncomment the line below:
-  // url      = env("DATABASE_URL")
 }
 
 // ---------------------------------------------------------------------------
@@ -15,6 +13,13 @@ datasource db {
 enum Role {
   CUSTOMER
   PARTNER
+  DRIVER
+}
+
+enum DriverAvailability {
+  AVAILABLE
+  BUSY
+  OFFLINE
 }
 
 enum OrderStatus {
@@ -48,9 +53,25 @@ model User {
   // Partner store relation (1-to-1)
   laundromat   Laundromat?
 
+  // Driver profile relation (1-to-1)
+  driverProfile DriverProfile?
+
   // Customer relations
   orders       Order[]
   reviews      Review[]
+}
+
+model DriverProfile {
+  id           Int                @id @default(autoincrement())
+  userId       Int                @unique
+  user         User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  vehicleType  String
+  plateNumber  String
+  availability DriverAvailability @default(OFFLINE)
+  latitude     Float?
+  longitude    Float?
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
 }
 
 model Laundromat {

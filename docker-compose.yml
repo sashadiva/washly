@@ -1,0 +1,53 @@
+# Washly local dev stack: PostgreSQL + Node/Express backend.
+# Run from this folder with:  docker compose up --build
+#
+# Nothing here touches your host Postgres (which stays on 5432). This DB is
+# published on 5433 so it can't collide with your other projects.
+
+services:
+  db:
+    image: postgres:18
+    container_name: washly-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: washly
+      POSTGRES_PASSWORD: washly
+      POSTGRES_DB: washly
+    ports:
+      - "5433:5432" # host 5433 -> container 5432
+    volumes:
+      # Postgres 18+ images want the mount one level up at /var/lib/postgresql
+      # (data lives in a version-specific subdirectory beneath it).
+      - washly-db-data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U washly -d washly"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build: ./Backend
+    container_name: washly-backend
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      # Inside the compose network the DB host is the service name "db":5432.
+      DATABASE_URL: "postgresql://washly:washly@db:5432/washly?schema=public"
+      PORT: "5000"
+    ports:
+      - "5000:5000"
+    volumes:
+      # Bind-mount source for hot reload, but keep the container's own
+      # node_modules (installed for Linux) instead of the host's.
+      - ./Backend:/app
+      - /app/node_modules
+    # Apply migrations and seed once the DB is healthy, then start dev server.
+    command: >
+      sh -c "npx prisma migrate deploy &&
+             npm run seed &&
+             npm run dev"
+
+volumes:
+  washly-db-data:

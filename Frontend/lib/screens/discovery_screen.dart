@@ -151,13 +151,16 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
             ),
             child: Row(
               children: [
-                OutlinedButton.icon(
-                  onPressed: _showFilterModal,
-                  icon: const Icon(Icons.tune, size: 18),
-                  label: Text(
-                    _selectedTags.isEmpty
-                        ? 'Filter Services'
-                        : 'Services (${_selectedTags.length})',
+                Flexible(
+                  child: OutlinedButton.icon(
+                    onPressed: _showFilterModal,
+                    icon: const Icon(Icons.tune, size: 18),
+                    label: Text(
+                      _selectedTags.isEmpty
+                          ? 'Filter Services'
+                          : 'Services (${_selectedTags.length})',
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
                 ),
                 const Spacer(),
