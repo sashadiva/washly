@@ -1,13 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import '../../core/auth_store.dart';
 import '../../theme/app_theme.dart';
 import '../account/account_settings_screen.dart';
-import '../discovery_screen.dart';
+import 'customer_home_screen.dart';
+import 'customer_orders_screen.dart';
+import 'vouchers_screen.dart';
 
-/// Customer bottom-nav shell. Home/Orders are placeholders in Phase 0 and are
-/// built out in later phases; Discovery is the existing screen; Profile hosts
-/// account settings.
+/// Customer bottom-nav shell: Home | Vouchers | Orders | Profile.
 class CustomerHomeShell extends StatefulWidget {
   const CustomerHomeShell({super.key});
 
@@ -18,81 +16,132 @@ class CustomerHomeShell extends StatefulWidget {
 class _CustomerHomeShellState extends State<CustomerHomeShell> {
   int _index = 0;
 
+  void _goTo(int i) => setState(() => _index = i);
+
+  static const _items = [
+    (Icons.home_rounded, Icons.home_outlined, 'Home'),
+    (Icons.confirmation_number_rounded, Icons.confirmation_number_outlined,
+        'Vouchers'),
+    (Icons.receipt_long_rounded, Icons.receipt_long_outlined, 'Orders'),
+    (Icons.person_rounded, Icons.person_outline, 'Profile'),
+  ];
+
   @override
   Widget build(BuildContext context) {
     final pages = [
-      const _CustomerHomePlaceholder(),
-      const DiscoveryScreen(),
-      const _ComingSoon(title: 'Orders'),
-      const _ProfileTab(),
+      CustomerHomeScreen(
+        onOpenDiscovery: () => _goTo(1),
+        onOpenOrders: () => _goTo(2),
+      ),
+      const VouchersScreen(),
+      const CustomerOrdersScreen(),
+      const AccountSettingsScreen(),
     ];
 
     return Scaffold(
       body: pages[_index],
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: _index,
-        onDestinationSelected: (i) => setState(() => _index = i),
-        destinations: const [
-          NavigationDestination(icon: Icon(Icons.home_outlined), label: 'Home'),
-          NavigationDestination(
-              icon: Icon(Icons.search), label: 'Discovery'),
-          NavigationDestination(
-              icon: Icon(Icons.receipt_long_outlined), label: 'Orders'),
-          NavigationDestination(
-              icon: Icon(Icons.person_outline), label: 'Profile'),
-        ],
+      bottomNavigationBar: _ModernNavBar(
+        index: _index,
+        items: _items,
+        onTap: _goTo,
       ),
     );
   }
 }
 
-class _CustomerHomePlaceholder extends StatelessWidget {
-  const _CustomerHomePlaceholder();
+/// A rounded, floating bottom navigation bar. The selected item shows a filled
+/// icon inside a soft pill; others are muted outlines.
+class _ModernNavBar extends StatelessWidget {
+  final int index;
+  final List<(IconData, IconData, String)> items;
+  final ValueChanged<int> onTap;
+
+  const _ModernNavBar({
+    required this.index,
+    required this.items,
+    required this.onTap,
+  });
+
   @override
   Widget build(BuildContext context) {
-    final name = context.watch<AuthStore>().currentUser?.name ?? '';
-    return Scaffold(
-      appBar: AppBar(title: const Text('Washly')),
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.xl),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(Icons.local_laundry_service,
-                  size: 56, color: AppColors.primary),
-              const SizedBox(height: AppSpacing.lg),
-              Text('Hi, $name', style: AppTypography.heading1),
-              const SizedBox(height: AppSpacing.sm),
-              const Text(
-                'Your home hub arrives in a later phase. Use Discovery to browse laundromats.',
-                textAlign: TextAlign.center,
-                style: AppTypography.body,
-              ),
-            ],
-          ),
+    return SafeArea(
+      top: false,
+      child: Container(
+        height: 72,
+        margin: const EdgeInsets.fromLTRB(
+          AppSpacing.lg,
+          0,
+          AppSpacing.lg,
+          AppSpacing.md,
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          // Max rounding: half the height, so the ends form a half circle.
+          borderRadius: BorderRadius.circular(36),
+          border: Border.all(color: AppColors.border),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.primary.withValues(alpha: 0.12),
+              blurRadius: 20,
+              offset: const Offset(0, 8),
+            ),
+          ],
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: List.generate(items.length, (i) {
+            final selected = i == index;
+            final (activeIcon, inactiveIcon, label) = items[i];
+            return _NavItem(
+              icon: selected ? activeIcon : inactiveIcon,
+              label: label,
+              selected: selected,
+              onTap: () => onTap(i),
+            );
+          }),
         ),
       ),
     );
   }
 }
 
-class _ComingSoon extends StatelessWidget {
-  final String title;
-  const _ComingSoon({required this.title});
+class _NavItem extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  const _NavItem({
+    required this.icon,
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text(title)),
-      body: Center(
-        child: Text('$title coming soon', style: AppTypography.body),
+    final color = selected ? AppColors.primary : AppColors.textMuted;
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: onTap,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 24, color: color),
+          const SizedBox(height: 3),
+          // Label always visible below the icon.
+          Text(
+            label,
+            style: TextStyle(
+              color: color,
+              fontSize: 11,
+              fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+            ),
+          ),
+        ],
       ),
     );
   }
-}
-
-class _ProfileTab extends StatelessWidget {
-  const _ProfileTab();
-  @override
-  Widget build(BuildContext context) => const AccountSettingsScreen();
 }

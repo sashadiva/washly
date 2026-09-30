@@ -52,153 +52,160 @@ This plan implements the Washly three-role marketplace (Customer, Partner, Drive
 
 ## Phase 1 – Data model expansion & shared rules
 
-- [ ] 7. Expand order-related schema
-  - [ ] 7.1 Extend `OrderStatus` (11 states), add `PaymentStatus`, `DriverAvailability`, `OfferStatus`, `WarrantyClaimStatus` enums
+- [x] 7. Expand order-related schema
+  - [x] 7.1 Extend `OrderStatus` (11 states), add `PaymentStatus`, `DriverAvailability`, `OfferStatus`, `WarrantyClaimStatus` enums
     - _Requirements: 5.5, 6.1, 8.6, 13.1, 16.7_
-  - [ ] 7.2 Add/extend models: `Order` (items, pricing snapshot, fee, weighedKg, finalTotal, voucher, driver), `OrderItem`, `DeliveryOffer`, `Payment`, `PointsTransaction`, `Voucher`, `DeclaredItem`, `WarrantyClaim`; migrate and regenerate client
+  - [x] 7.2 Add/extend models: `Order` (items, pricing snapshot, fee, weighedKg, finalTotal, voucher, driver), `OrderItem`, `DeliveryOffer`, `Payment`, `PointsTransaction`, `Voucher`, `DeclaredItem`, `WarrantyClaim`; migrate and regenerate client
     - _Requirements: 5.1, 8.6, 13.1, 15.1, 16.1_
 
-- [ ] 8. Shared rule services
-  - [ ] 8.1 Extract haversine into `distanceService.ts`; add `deliveryFeeService.ts` implementing 5.000 base + ceil(km-5)*1.000
+- [x] 8. Shared rule services
+  - [x] 8.1 Extract haversine into `distanceService.ts`; add `deliveryFeeService.ts` implementing 5.000 base + ceil(km-5)*1.000
     - _Requirements: 5.2_
-  - [ ] 8.2 Add `orderStateMachine.ts` (allowed transitions + per-role guards; illegal -> 409)
+  - [x] 8.2 Add `orderStateMachine.ts` (allowed transitions + per-role guards; illegal -> 409)
     - _Requirements: 6.1, 6.3_
-  - [ ] 8.3 Add `toCustomerLaundromat` response mapper that omits exact address/lat/lng and returns distance + areaLabel; add `areaLabel` to `Laundromat`
+  - [x] 8.3 Add `toCustomerLaundromat` response mapper that omits exact address/lat/lng and returns distance + areaLabel; add `areaLabel` to `Laundromat`
     - _Requirements: 3.4, 3.5, 11.3_
 
-- [ ] 9. Update discovery/detail to hide location
+- [x] 9. Update discovery/detail to hide location
   - Apply `toCustomerLaundromat` to `GET /api/laundromats` and `GET /api/laundromats/:id`; keep tag filter + sort; return list without distance if customer coords absent
   - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.6_
 
-- [ ] 10. Update dev seed
+- [x] 10. Update dev seed
   - Seed one customer, two partners (with services + `areaLabel` + coords), two drivers, and marketplace tags so all roles are demoable
   - _Requirements: 1.2, 1.3, 1.4_
 
-- [ ] 11. Phase 1 verification
-  - Unit: `deliveryFeeService` (e.g. 4km=5000, 5km=5000, 7km=7000, 8.3km=8000) and one illegal state-machine transition rejected
+- [x] 11. Phase 1 verification
+  - Unit: `deliveryFeeService` (e.g. 4km=5000, 5km=5000, 7km=7000, 8.3km=9000 per the design formula) and one illegal state-machine transition rejected
   - API check: customer discovery response contains no address/lat/lng
   - _Requirements: 3.4, 5.2, 6.3_
+  - NOTE: tasks.md originally listed "8.3km=8000", which contradicts the design formula `5000 + ceil(distance-5)*1000` (ceil(3.3)=4 -> 9000). Implemented/tested per the authoritative formula (9000). Confirm with the team if 8000 was intended.
 
 ## Phase 2 – Customer core (ordering, tracking, history, receipts)
 
-- [ ] 12. Rich order model on the frontend
+- [x] 12. Rich order model on the frontend
   - Add Dart models: rich `Order` (items, status, fee, weighed, totals), `OrderItem`, and update `CartItem` usage; add `order_service.dart`
   - _Requirements: 5.1, 6.1, 9.2_
 
-- [ ] 13. Order creation endpoint
+- [x] 13. Order creation endpoint
   - `POST /api/orders`: build `OrderItem`s from cart, compute distance + delivery fee, set `pricingModel` snapshot; per-item compute `itemsSubtotal`/`finalTotal`, per-kg estimate only; set initial status `PENDING_ACCEPTANCE`; accept optional `declaredItems` and `voucherId`; validate non-empty cart + pickup address
   - _Requirements: 5.1, 5.2, 5.3, 5.4, 5.5, 5.6, 16.1_
 
-- [ ] 14. Extend checkout screen
+- [x] 14. Extend checkout screen
   - Replace hardcoded `customerId: 1` with the authed user and the hardcoded fee with the server-computed fee; per-kg checkout shows "final price after weighing" instead of a total; add optional declared-item capture (`image_picker`) and voucher selection placeholder (wired in Phase 6)
   - _Requirements: 4.2, 4.3, 5.2, 5.4, 16.1, 16.2_
 
-- [ ] 15. Order tracking and history
-  - [ ] 15.1 Backend `GET /api/orders/mine` and `GET /api/orders/:id` (owner-scoped, includes items + timeline + receipt fields)
+- [x] 15. Order tracking and history
+  - [x] 15.1 Backend `GET /api/orders/mine` and `GET /api/orders/:id` (owner-scoped, includes items + timeline + receipt fields)
     - _Requirements: 6.1, 6.2, 9.1, 9.2, 9.3_
-  - [ ] 15.2 Customer Orders tab: active tracking with a `StatusTimeline` widget (discrete stages, no map) and past-order history list
+  - [x] 15.2 Customer Orders tab: active tracking with a `StatusTimeline` widget (discrete stages, no map) and past-order history list
     - _Requirements: 6.1, 6.2, 6.4, 9.1_
-  - [ ] 15.3 Receipt view (line items, weights/qty, delivery fee, voucher, points earned, payment status, grand total)
+  - [x] 15.3 Receipt view (line items, weights/qty, delivery fee, voucher, points earned, payment status, grand total)
     - _Requirements: 9.2_
 
-- [ ] 16. Per-kg weigh-in confirmation (customer side)
+- [x] 16. Per-kg weigh-in confirmation (customer side)
   - Backend `POST /api/orders/:id/approve-weight` (customer-only; WEIGHED_AWAITING_CONFIRM -> AWAITING_PAYMENT); UI to view measured weight + final price and approve
   - _Requirements: 7.2, 7.3_
 
-- [ ] 17. Phase 2 verification
+- [x] 17. Phase 2 verification
   - API: create a per-item order and a per-kg order; confirm fee computed, per-item has total, per-kg has estimate only; confirm `GET /orders/mine` returns only the caller's orders
   - Manual: place an order in Chrome and see it in the Orders tab
   - _Requirements: 5.2, 5.3, 5.4, 9.3_
+  - VERIFIED: API checks pass (per-item fee 9000/subtotal/final + lineTotals; per-kg fee 5000, subtotal/final/lineTotal null; /mine owner-scoped; cross-customer detail -> 404). `flutter build web` compiles the full app. Interactive Chrome click-through left for a human (cannot drive a browser in this environment).
 
 ## Phase 3 – Partner core (order management, profile/services, dashboard)
 
-- [ ] 18. Partner order management endpoints
-  - [ ] 18.1 `GET /api/partner/orders` (own laundromat only); `accept`/`reject` (reject -> CANCELLED; accept requires per-item payment SETTLED)
+- [x] 18. Partner order management endpoints
+  - [x] 18.1 `GET /api/partner/orders` (own laundromat only); `accept`/`reject` (reject -> CANCELLED; accept requires per-item payment SETTLED)
     - _Requirements: 10.1, 10.2, 10.5_
-  - [ ] 18.2 `POST /api/partner/orders/:id/weigh` (per-kg: set `weighedKg`, compute final price -> WEIGHED_AWAITING_CONFIRM) and `POST .../ready` (WASHING -> READY_FOR_DELIVERY)
+  - [x] 18.2 `POST /api/partner/orders/:id/weigh` (per-kg: set `weighedKg`, compute final price -> WEIGHED_AWAITING_CONFIRM) and `POST .../ready` (WASHING -> READY_FOR_DELIVERY)
     - _Requirements: 7.1, 10.3, 10.4_
 
-- [ ] 19. Partner profile and services endpoints
+- [x] 19. Partner profile and services endpoints
   - `GET/PUT /api/partner/profile` (description, image, specialties, pricing model, coords, areaLabel; own only); `GET/POST/PUT/DELETE /api/partner/services[/:id]`
   - _Requirements: 11.1, 11.2, 11.3, 11.4_
 
-- [ ] 20. Partner sales dashboard endpoint
+- [x] 20. Partner sales dashboard endpoint
   - `GET /api/partner/dashboard?from=&to=` computing revenue + order counts from own paid orders; zeros when none
   - _Requirements: 12.1, 12.2, 12.3_
 
-- [ ] 21. Partner screens
+- [x] 21. Partner screens
   - Build `partner_service.dart` and screens: Dashboard (summary), Orders (accept/reject, weigh-in entry, advance status), Services editor, Profile (shop editor + account settings), all on existing theme
   - _Requirements: 10.1, 10.2, 10.3, 10.4, 11.1, 11.2, 12.1_
 
-- [ ] 22. Phase 3 verification
+- [x] 22. Phase 3 verification
   - API: partner accepts an order and advances status; partner A cannot see/act on partner B's orders; dashboard sums only own paid orders
   - Manual: partner logs in, views incoming order, enters weight for a per-kg order
   - _Requirements: 10.5, 12.2_
+  - VERIFIED: paid per-item accept -> ACCEPTED; partner B cannot see/reject A's order (404); dashboard A revenue=55000/paid=1 vs B=0. `flutter build web` compiles. Also fixed the review-dialog hardcoded `userId: 1` (now uses AuthStore) and its async-gap lint; full `dart analyze` clean. Interactive Chrome click-through left for a human.
 
 ## Phase 4 – Driver core (assignment, accept/reject, status, history)
 
-- [ ] 23. Assignment engine
+- [x] 23. Assignment engine
   - `assignmentService.ts`: on `ACCEPTED` (pickup) and `READY_FOR_DELIVERY` (delivery), offer to nearest AVAILABLE driver via `DeliveryOffer`; accept assigns + sets driver BUSY + expires siblings; reject re-offers next nearest; exhausted list leaves order awaiting
   - _Requirements: 13.1, 13.2, 13.3, 13.5_
 
-- [ ] 24. Driver endpoints
+- [x] 24. Driver endpoints
   - `GET /api/driver/offers`; `accept`/`reject`; `POST .../picked-up` (DRIVER_ASSIGNED -> PICKED_UP); `POST .../delivered` (OUT_FOR_DELIVERY -> COMPLETED, trigger completion effects); `PUT /api/driver/availability` (Active/Not Active + location); `GET /api/driver/history`
   - _Requirements: 13.2, 13.3, 13.4, 14.1, 14.2, 14.3, 14.4_
 
-- [ ] 25. Driver screens
+- [x] 25. Driver screens
   - Build `driver_service.dart` and screens: Offers (accept/reject), Active delivery (mark picked-up/delivered), History, Profile (account settings + Active/Not Active availability toggle, labeled to avoid internet-connectivity confusion)
   - _Requirements: 13.4, 14.1, 14.3_
 
-- [ ] 26. Phase 4 verification
+- [x] 26. Phase 4 verification
   - API: an accepted order is offered to the nearest available driver; reject re-offers to the next; accept assigns and stops further offers; driver sees only own offers/history
   - Manual: driver accepts an offer and marks it delivered -> order shows COMPLETED
   - _Requirements: 13.2, 13.3, 14.1, 14.4_
+  - VERIFIED: full lifecycle exercised live — accept offers to nearest (Andi) not far driver; reject re-offers to next (Budi); accept assigns + BUSY + expires siblings + no open offers; cross-driver action -> 404; picked-up -> PICKED_UP; delivery offered to available driver; delivered -> COMPLETED + driver freed; history owner-scoped. `flutter build web` compiles. Interactive Chrome click-through left for a human.
 
 ## Phase 5 – Payments (Midtrans Sandbox)
 
-- [ ] 27. Midtrans service and payment creation
+- [x] 27. Midtrans service and payment creation
   - `midtransService.ts` (create Snap transaction with server key; helper to verify notification signature); `POST /api/payments/:orderId/create` returns `snapToken`; record `Payment` (PENDING); add env vars `MIDTRANS_SERVER_KEY`, `MIDTRANS_CLIENT_KEY`, `MIDTRANS_IS_PRODUCTION=false`, `APP_WEBHOOK_BASE_URL`
   - _Requirements: 8.1, 8.6_
 
-- [ ] 28. Webhook (source of truth)
+- [x] 28. Webhook (source of truth)
   - `POST /api/payments/webhook`: verify signature; map settlement/capture -> SETTLED (else FAILED/EXPIRED/CANCELLED); update `Payment` + `Order`; advance state machine when the required charge is satisfied; idempotent; document ngrok tunnel usage in `.env`
   - _Requirements: 8.3, 8.4, 8.5_
 
-- [ ] 29. Frontend payment launcher
+- [x] 29. Frontend payment launcher
   - `PaymentLauncher` abstraction + `payment_service.dart`: open Snap (redirect on web / SDK-or-webview on mobile) using the token; poll order status after return
   - _Requirements: 8.2_
 
-- [ ] 30. Wire payment into both moments
+- [x] 30. Wire payment into both moments
   - Per-item: pay at checkout before partner acceptance; per-kg: pay after weigh-in approval (AWAITING_PAYMENT); on SETTLED advance to WASHING
   - _Requirements: 5.3, 7.3, 7.4, 8.4_
 
-- [ ] 31. Phase 5 verification
+- [x] 31. Phase 5 verification
   - API: webhook with a valid signature marks the order paid and advances state; an invalid signature does not; a client cannot mark an order paid directly
   - Manual: complete a sandbox payment via Snap in Chrome and see the order advance
   - _Requirements: 8.3, 8.4, 8.5_
+  - VERIFIED (API): real Snap create returned a token (sandbox keys valid); valid-signature webhook -> SETTLED + order unblocked; invalid signature -> 403 no change; duplicate webhook idempotent; no client endpoint can mark paid. `flutter build web` compiles. MANUAL (needs user's machine): run `ngrok http 5000`, set APP_WEBHOOK_BASE_URL + Midtrans dashboard Payment Notification URL to `<ngrok>/api/payments/webhook`, then complete a Snap payment in Chrome and watch the order advance.
 
 ## Phase 6 – Loyalty & warranty
 
-- [ ] 32. Loyalty backend
+- [x] 32. Loyalty backend
   - `pointsService.ts`: award floor(amountPaid/10000)*5 on COMPLETED+SETTLED (ledger entry); balance = sum of ledger; `POST /api/loyalty/redeem` (100 points -> Rp 10.000 voucher, atomic); `GET /api/loyalty/wallet`; apply voucher at checkout (reduce payable before Midtrans, mark voucher used, single-use)
   - _Requirements: 15.1, 15.2, 15.3, 15.4, 15.5, 15.6_
 
-- [ ] 33. Home hub with wallet (customer)
+- [x] 33. Home hub with wallet (customer)
   - Build Home tab: `HeroBanner` (bundled asset + gradient fallback, greeting), active-order status card, discovery search entry, specialty shortcuts (pre-filtered discovery), loyalty wallet (balance + redeem vouchers), reorder shortcut; add hero asset to `assets/` + `pubspec.yaml`; set customer nav to Home | Discovery | Orders | Profile
   - _Requirements: 15.6, 18.1, 18.2, 18.3, 18.4, 18.5, 18.6, 18.7, 18.8_
+  - NOTE: HeroBanner uses the gradient fallback path (always renders) with an `errorBuilder` for a missing asset; no binary image committed. Drop a JPG at `Frontend/assets/hero_banner.jpg` + declare in pubspec later if a photo is wanted.
 
-- [ ] 34. Warranty backend
+- [x] 34. Warranty backend
   - Declared items captured at order creation (Task 13); `POST /api/partner/orders/:id/intake` (confirm declared items received or flag discrepancy); `POST /api/orders/:id/claims` (only against declared+confirmed items on a completed order, owner-only); `GET /api/orders/:id/claims`; `POST /api/partner/claims/:id/resolve` (partner-only; status + note; payout attributed to Washly)
   - _Requirements: 16.3, 16.4, 16.5, 16.6, 16.7, 16.8, 16.9, 16.10_
 
-- [ ] 35. Warranty screens
+- [x] 35. Warranty screens
   - Partner intake-confirm action in order detail; customer warranty-claim submission from a completed order (description + photos) and claim status view; partner claim review/resolve
   - _Requirements: 16.3, 16.5, 16.9_
 
-- [ ] 36. Phase 6 verification
+- [x] 36. Phase 6 verification
   - API: completing a paid order awards correct points; redeeming 100 points yields a single-use Rp 10.000 voucher and applying it reduces payable; a claim is rejected unless its item was declared + partner-confirmed
   - Manual: view points on Home after an order; submit a warranty claim on a declared item
   - _Requirements: 15.1, 15.4, 16.6_
+  - VERIFIED (API): completed paid order awarded 35 pts for Rp 75.000; redeem gated <100 (400) then yielded a voucher; voucher reduced payable 40000->30000 and is single-use; claim rejected unless item declared+partner-confirmed. `flutter build web` compiles the full app; 16 backend unit tests pass. Interactive Chrome click-through left for a human.
 
 
 ## Task Dependency Graph

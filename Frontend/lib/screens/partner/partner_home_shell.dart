@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import '../../core/auth_store.dart';
-import '../../theme/app_theme.dart';
-import '../account/account_settings_screen.dart';
+import 'partner_dashboard_screen.dart';
+import 'partner_orders_screen.dart';
+import 'partner_services_screen.dart';
+import 'partner_profile_screen.dart';
 
-/// Partner bottom-nav shell. Dashboard/Orders/Services are placeholders in
-/// Phase 0; Profile hosts account settings (shop editor is added in Phase 3).
+/// Partner bottom-nav shell: Dashboard | Orders | Services | Profile.
 class PartnerHomeShell extends StatefulWidget {
   const PartnerHomeShell({super.key});
 
@@ -18,12 +17,11 @@ class _PartnerHomeShellState extends State<PartnerHomeShell> {
 
   @override
   Widget build(BuildContext context) {
-    final name = context.watch<AuthStore>().currentUser?.name ?? '';
-    final pages = [
-      _Placeholder(title: 'Dashboard', greeting: 'Hi, $name'),
-      const _Placeholder(title: 'Orders'),
-      const _Placeholder(title: 'Services'),
-      const AccountSettingsScreen(),
+    final pages = const [
+      PartnerDashboardScreen(),
+      PartnerOrdersScreen(),
+      PartnerServicesScreen(),
+      PartnerProfileScreen(),
     ];
 
     return Scaffold(
@@ -41,30 +39,6 @@ class _PartnerHomeShellState extends State<PartnerHomeShell> {
           NavigationDestination(
               icon: Icon(Icons.person_outline), label: 'Profile'),
         ],
-      ),
-    );
-  }
-}
-
-class _Placeholder extends StatelessWidget {
-  final String title;
-  final String? greeting;
-  const _Placeholder({required this.title, this.greeting});
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text(title)),
-      body: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (greeting != null) ...[
-              Text(greeting!, style: AppTypography.heading1),
-              const SizedBox(height: AppSpacing.sm),
-            ],
-            Text('$title coming soon', style: AppTypography.body),
-          ],
-        ),
       ),
     );
   }

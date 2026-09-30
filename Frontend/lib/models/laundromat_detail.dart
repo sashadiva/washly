@@ -5,7 +5,7 @@ class LaundromatDetail {
   final int id;
   final String name;
   final String? description;
-  final String address;
+  final String? areaLabel;
   final double rating;
   final int reviewCount;
   final String? imageUrl;
@@ -17,7 +17,7 @@ class LaundromatDetail {
     required this.id,
     required this.name,
     this.description,
-    required this.address,
+    this.areaLabel,
     required this.rating,
     required this.reviewCount,
     this.imageUrl,
@@ -31,7 +31,7 @@ class LaundromatDetail {
       id: json['id'] as int,
       name: json['name'] as String,
       description: json['description'] as String?,
-      address: json['address'] as String,
+      areaLabel: json['areaLabel'] as String?,
       rating: (json['rating'] as num).toDouble(),
       reviewCount: json['reviewCount'] as int,
       imageUrl: json['imageUrl'] as String?,

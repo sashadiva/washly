@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import '../../core/auth_store.dart';
-import '../../theme/app_theme.dart';
-import '../account/account_settings_screen.dart';
+import 'driver_offers_screen.dart';
+import 'driver_active_screen.dart';
+import 'driver_history_screen.dart';
+import 'driver_profile_screen.dart';
 
-/// Driver bottom-nav shell. Offers/Active/History are placeholders in Phase 0;
-/// Profile hosts account settings (availability toggle is added in Phase 4).
+/// Driver bottom-nav shell: Offers | Active | History | Profile.
 class DriverHomeShell extends StatefulWidget {
   const DriverHomeShell({super.key});
 
@@ -18,12 +17,11 @@ class _DriverHomeShellState extends State<DriverHomeShell> {
 
   @override
   Widget build(BuildContext context) {
-    final name = context.watch<AuthStore>().currentUser?.name ?? '';
-    final pages = [
-      _Placeholder(title: 'Offers', greeting: 'Hi, $name'),
-      const _Placeholder(title: 'Active'),
-      const _Placeholder(title: 'History'),
-      const AccountSettingsScreen(),
+    final pages = const [
+      DriverOffersScreen(),
+      DriverActiveScreen(),
+      DriverHistoryScreen(),
+      DriverProfileScreen(),
     ];
 
     return Scaffold(
@@ -36,35 +34,10 @@ class _DriverHomeShellState extends State<DriverHomeShell> {
               icon: Icon(Icons.local_offer_outlined), label: 'Offers'),
           NavigationDestination(
               icon: Icon(Icons.two_wheeler_outlined), label: 'Active'),
-          NavigationDestination(
-              icon: Icon(Icons.history), label: 'History'),
+          NavigationDestination(icon: Icon(Icons.history), label: 'History'),
           NavigationDestination(
               icon: Icon(Icons.person_outline), label: 'Profile'),
         ],
-      ),
-    );
-  }
-}
-
-class _Placeholder extends StatelessWidget {
-  final String title;
-  final String? greeting;
-  const _Placeholder({required this.title, this.greeting});
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text(title)),
-      body: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (greeting != null) ...[
-              Text(greeting!, style: AppTypography.heading1),
-              const SizedBox(height: AppSpacing.sm),
-            ],
-            Text('$title coming soon', style: AppTypography.body),
-          ],
-        ),
       ),
     );
   }

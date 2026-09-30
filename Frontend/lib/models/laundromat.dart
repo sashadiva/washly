@@ -1,7 +1,7 @@
 class Laundromat {
   final int id;
   final String name;
-  final String address;
+  final String? areaLabel; // coarse public location (no exact address)
   final double rating;
   final int reviewCount;
   final double? distanceKm;
@@ -11,7 +11,7 @@ class Laundromat {
   Laundromat({
     required this.id,
     required this.name,
-    required this.address,
+    this.areaLabel,
     required this.rating,
     required this.reviewCount,
     this.distanceKm,
@@ -23,7 +23,7 @@ class Laundromat {
     return Laundromat(
       id: json['id'],
       name: json['name'],
-      address: json['address'],
+      areaLabel: json['areaLabel'] as String?,
       rating: (json['rating'] as num).toDouble(),
       reviewCount: json['reviewCount'],
       distanceKm: json['distanceKm'] != null ? (json['distanceKm'] as num).toDouble() : null,

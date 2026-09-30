@@ -1,12 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/auth_store.dart';
-import '../../services/auth_service.dart';
+import '../../core/locale_store.dart';
+import '../../core/profile_photo_store.dart';
 import '../../theme/app_theme.dart';
+import '../../widgets/profile_avatar.dart';
 import '../auth/role_select_screen.dart';
+import 'change_language_screen.dart';
+import 'change_password_screen.dart';
+import 'edit_profile_screen.dart';
 
-/// Shared account settings used under every role's Profile tab:
-/// edit name/phone, change password, and log out. Email is read-only.
+/// Shared account settings used under every role's Profile tab. Shows a profile
+/// header (avatar + name + email) and a menu that navigates to dedicated pages
+/// for editing profile, changing password, and language, plus logout.
 class AccountSettingsScreen extends StatefulWidget {
   const AccountSettingsScreen({super.key});
 
@@ -15,82 +21,36 @@ class AccountSettingsScreen extends StatefulWidget {
 }
 
 class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
-  final _authService = AuthService();
-
-  final _profileFormKey = GlobalKey<FormState>();
-  late final TextEditingController _name;
-  late final TextEditingController _phone;
-  bool _savingProfile = false;
-
-  final _passwordFormKey = GlobalKey<FormState>();
-  final _currentPassword = TextEditingController();
-  final _newPassword = TextEditingController();
-  bool _savingPassword = false;
-
   @override
   void initState() {
     super.initState();
     final user = context.read<AuthStore>().currentUser;
-    _name = TextEditingController(text: user?.name ?? '');
-    _phone = TextEditingController(text: user?.phone ?? '');
+    if (user != null) {
+      // Scope the local profile photo to this user.
+      context.read<ProfilePhotoStore>().loadFor(user.id);
+    }
   }
 
-  @override
-  void dispose() {
-    _name.dispose();
-    _phone.dispose();
-    _currentPassword.dispose();
-    _newPassword.dispose();
-    super.dispose();
-  }
-
-  void _toast(String msg, {bool error = false}) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(msg),
-        backgroundColor: error ? AppColors.error : AppColors.success,
+  Future<void> _confirmLogout() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Log out'),
+        content: const Text('Are you sure you want to log out?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Log out',
+                style: TextStyle(color: AppColors.error)),
+          ),
+        ],
       ),
     );
-  }
-
-  Future<void> _saveProfile() async {
-    if (!_profileFormKey.currentState!.validate()) return;
-    setState(() => _savingProfile = true);
-    try {
-      final updated = await _authService.updateProfile(
-        name: _name.text.trim(),
-        phone: _phone.text.trim(),
-      );
-      if (!mounted) return;
-      await context.read<AuthStore>().updateUser(updated);
-      if (!mounted) return;
-      _toast('Profile updated.');
-    } catch (e) {
-      if (!mounted) return;
-      _toast(e.toString().replaceFirst('Exception: ', ''), error: true);
-    } finally {
-      if (mounted) setState(() => _savingProfile = false);
-    }
-  }
-
-  Future<void> _changePassword() async {
-    if (!_passwordFormKey.currentState!.validate()) return;
-    setState(() => _savingPassword = true);
-    try {
-      await _authService.changePassword(
-        currentPassword: _currentPassword.text,
-        newPassword: _newPassword.text,
-      );
-      if (!mounted) return;
-      _currentPassword.clear();
-      _newPassword.clear();
-      _toast('Password changed.');
-    } catch (e) {
-      if (!mounted) return;
-      _toast(e.toString().replaceFirst('Exception: ', ''), error: true);
-    } finally {
-      if (mounted) setState(() => _savingPassword = false);
-    }
+    if (confirmed == true) _logout();
   }
 
   Future<void> _logout() async {
@@ -102,9 +62,16 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
     );
   }
 
+  void _open(Widget page) {
+    Navigator.push(context, MaterialPageRoute(builder: (_) => page));
+  }
+
   @override
   Widget build(BuildContext context) {
     final user = context.watch<AuthStore>().currentUser;
+    final photo = context.watch<ProfilePhotoStore>().dataUri;
+    final localeCode = context.watch<LocaleStore>().locale.languageCode;
+    final languageLabel = localeCode == 'id' ? 'Indonesian' : 'English';
 
     return Scaffold(
       appBar: AppBar(title: const Text('Account settings')),
@@ -112,132 +79,44 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
         child: ListView(
           padding: const EdgeInsets.all(AppSpacing.xl),
           children: [
-            // Email (read-only).
-            _Card(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text('Email', style: AppTypography.caption),
-                  const SizedBox(height: AppSpacing.xs),
-                  Text(user?.email ?? '-', style: AppTypography.subheading),
-                  const SizedBox(height: AppSpacing.xs),
-                  const Text('Email is your login and cannot be changed.',
-                      style: AppTypography.caption),
-                ],
-              ),
-            ),
-            const SizedBox(height: AppSpacing.lg),
+            _profileHeader(user?.name ?? '-', user?.email ?? '-', photo),
+            const SizedBox(height: AppSpacing.xl),
 
-            // Profile.
-            _Card(
-              child: Form(
-                key: _profileFormKey,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    const Text('Profile', style: AppTypography.heading2),
-                    const SizedBox(height: AppSpacing.lg),
-                    TextFormField(
-                      controller: _name,
-                      decoration: const InputDecoration(labelText: 'Name'),
-                      validator: (v) => (v == null || v.trim().isEmpty)
-                          ? 'Name is required'
-                          : null,
-                    ),
-                    const SizedBox(height: AppSpacing.lg),
-                    TextFormField(
-                      controller: _phone,
-                      keyboardType: TextInputType.phone,
-                      decoration: const InputDecoration(labelText: 'Phone'),
-                      validator: (v) => (v == null || v.trim().isEmpty)
-                          ? 'Phone is required'
-                          : null,
-                    ),
-                    const SizedBox(height: AppSpacing.lg),
-                    ElevatedButton(
-                      onPressed: _savingProfile ? null : _saveProfile,
-                      child: _savingProfile
-                          ? const _Spinner()
-                          : const Text('Save profile'),
-                    ),
-                  ],
-                ),
-              ),
+            _MenuTile(
+              icon: Icons.person_outline,
+              title: 'Edit Profile',
+              onTap: () => _open(const EditProfileScreen()),
             ),
-            const SizedBox(height: AppSpacing.lg),
+            const SizedBox(height: AppSpacing.md),
 
-            // Password.
-            _Card(
-              child: Form(
-                key: _passwordFormKey,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    const Text('Change password',
-                        style: AppTypography.heading2),
-                    const SizedBox(height: AppSpacing.lg),
-                    TextFormField(
-                      controller: _currentPassword,
-                      obscureText: true,
-                      decoration: const InputDecoration(
-                          labelText: 'Current password'),
-                      validator: (v) => (v == null || v.isEmpty)
-                          ? 'Current password is required'
-                          : null,
-                    ),
-                    const SizedBox(height: AppSpacing.lg),
-                    TextFormField(
-                      controller: _newPassword,
-                      obscureText: true,
-                      decoration:
-                          const InputDecoration(labelText: 'New password'),
-                      validator: (v) {
-                        if (v == null || v.isEmpty) {
-                          return 'New password is required';
-                        }
-                        if (v.length < 6) return 'At least 6 characters';
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: AppSpacing.lg),
-                    ElevatedButton(
-                      onPressed: _savingPassword ? null : _changePassword,
-                      child: _savingPassword
-                          ? const _Spinner()
-                          : const Text('Update password'),
-                    ),
-                  ],
-                ),
-              ),
+            _MenuTile(
+              icon: Icons.lock_outline,
+              title: 'Change Password',
+              onTap: () => _open(const ChangePasswordScreen()),
             ),
-            const SizedBox(height: AppSpacing.lg),
+            const SizedBox(height: AppSpacing.md),
 
-            OutlinedButton.icon(
-              onPressed: _logout,
-              icon: const Icon(Icons.logout, color: AppColors.error),
-              label: const Text('Log out',
-                  style: TextStyle(color: AppColors.error)),
-              style: OutlinedButton.styleFrom(
-                side: const BorderSide(color: AppColors.error),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(AppRadius.md),
-                ),
-                padding:
-                    const EdgeInsets.symmetric(vertical: AppSpacing.md),
-              ),
+            _MenuTile(
+              icon: Icons.language_outlined,
+              title: 'Change Language',
+              trailingText: languageLabel,
+              onTap: () => _open(const ChangeLanguageScreen()),
+            ),
+            const SizedBox(height: AppSpacing.md),
+
+            _MenuTile(
+              icon: Icons.logout,
+              title: 'Log out',
+              danger: true,
+              onTap: _confirmLogout,
             ),
           ],
         ),
       ),
     );
   }
-}
 
-class _Card extends StatelessWidget {
-  final Widget child;
-  const _Card({required this.child});
-  @override
-  Widget build(BuildContext context) {
+  Widget _profileHeader(String name, String email, String? photo) {
     return Container(
       padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
@@ -245,18 +124,92 @@ class _Card extends StatelessWidget {
         borderRadius: BorderRadius.circular(AppRadius.lg),
         border: Border.all(color: AppColors.border),
       ),
-      child: child,
+      child: Row(
+        children: [
+          ProfileAvatar(name: name, dataUri: photo, size: 56),
+          const SizedBox(width: AppSpacing.md),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppTypography.heading2),
+                const SizedBox(height: AppSpacing.xs),
+                Text(email,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppTypography.caption),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
 
-class _Spinner extends StatelessWidget {
-  const _Spinner();
+/// A tappable menu row that navigates to a page (chevron) or runs an action.
+class _MenuTile extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final bool danger;
+  final String? trailingText;
+  final VoidCallback onTap;
+
+  const _MenuTile({
+    required this.icon,
+    required this.title,
+    required this.onTap,
+    this.danger = false,
+    this.trailingText,
+  });
+
   @override
-  Widget build(BuildContext context) => const SizedBox(
-        height: 20,
-        width: 20,
-        child:
-            CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-      );
+  Widget build(BuildContext context) {
+    final color = danger ? AppColors.error : AppColors.textPrimary;
+    final accent = danger ? AppColors.error : AppColors.primary;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(AppRadius.lg),
+        border: Border.all(
+          color:
+              danger ? AppColors.error.withValues(alpha: 0.4) : AppColors.border,
+        ),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpacing.lg),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(AppSpacing.sm),
+                decoration: BoxDecoration(
+                  color: accent.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(AppRadius.sm),
+                ),
+                child: Icon(icon, size: 20, color: accent),
+              ),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: Text(title,
+                    style: AppTypography.subheading.copyWith(color: color)),
+              ),
+              if (trailingText != null) ...[
+                Text(trailingText!, style: AppTypography.caption),
+                const SizedBox(width: AppSpacing.xs),
+              ],
+              if (!danger)
+                const Icon(Icons.chevron_right, color: AppColors.textMuted),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }

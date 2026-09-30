@@ -23,17 +23,44 @@ enum DriverAvailability {
 }
 
 enum OrderStatus {
-  PICKUP_REQUESTED
-  PICKED_UP
-  WASHING
-  OUT_FOR_DELIVERY
-  COMPLETED
-  CANCELLED
+  PENDING_ACCEPTANCE          // created, waiting for partner
+  ACCEPTED                    // partner accepted, ready to offer to a driver
+  DRIVER_ASSIGNED             // a driver accepted the pickup offer
+  PICKED_UP                   // driver collected laundry
+  WEIGHED_AWAITING_CONFIRM    // per-kg only: partner weighed, awaiting customer approval
+  AWAITING_PAYMENT            // payment required (per-item: at start; per-kg: after confirm)
+  WASHING                     // payment confirmed, in service
+  READY_FOR_DELIVERY          // washing done, ready to offer delivery
+  OUT_FOR_DELIVERY            // driver delivering
+  COMPLETED                   // delivered
+  CANCELLED                   // rejected or aborted
 }
 
 enum PricingUnit {
   PER_KG
   PER_ITEM
+}
+
+enum PaymentStatus {
+  PENDING
+  SETTLED
+  FAILED
+  EXPIRED
+  CANCELLED
+}
+
+enum OfferStatus {
+  OFFERED
+  ACCEPTED
+  REJECTED
+  EXPIRED
+}
+
+enum WarrantyClaimStatus {
+  SUBMITTED
+  APPROVED
+  REJECTED
+  RESOLVED
 }
 
 // ---------------------------------------------------------------------------
@@ -57,8 +84,10 @@ model User {
   driverProfile DriverProfile?
 
   // Customer relations
-  orders       Order[]
+  orders       Order[]      @relation("CustomerOrders")
   reviews      Review[]
+  pointsTransactions PointsTransaction[]
+  vouchers     Voucher[]
 }
 
 model DriverProfile {
@@ -68,10 +97,13 @@ model DriverProfile {
   vehicleType  String
   plateNumber  String
   availability DriverAvailability @default(OFFLINE)
-  latitude     Float?
+  latitude     Float?             // last known location for nearest-driver matching
   longitude    Float?
   createdAt    DateTime           @default(now())
   updatedAt    DateTime           @updatedAt
+
+  offers         DeliveryOffer[]
+  assignedOrders Order[]          @relation("DriverOrders")
 }
 
 model Laundromat {
@@ -79,6 +111,7 @@ model Laundromat {
   name        String
   description String?
   address     String
+  areaLabel   String?             // coarse public descriptor (e.g. district); safe to expose
   latitude    Float
   longitude   Float
   imageUrl    String?
@@ -142,21 +175,133 @@ model Review {
   laundromat   Laundromat @relation(fields: [laundromatId], references: [id], onDelete: Cascade)
 }
 
+// ---------------------------------------------------------------------------
+// Order lifecycle models
+// ---------------------------------------------------------------------------
+
 model Order {
-  id              Int         @id @default(autoincrement())
-  pickupAddress   String
-  deliveryAddress String
-  serviceType     String      // Primary service selected or order summary
-  notes           String?
-  estimatedKg     Float?
-  totalPrice      Float?
-  status          OrderStatus @default(PICKUP_REQUESTED)
-  createdAt       DateTime    @default(now())
-  updatedAt       DateTime    @updatedAt
+  id                Int          @id @default(autoincrement())
+  status            OrderStatus  @default(PENDING_ACCEPTANCE)
+  pricingModel      PricingUnit                              // snapshot of the shop's model at order time
+  pickupAddress     String
+  deliveryAddress   String
+  customerLat       Float?                                   // used for fee + distance
+  customerLng       Float?
+  notes             String?
 
-  customerId      Int
-  customer        User        @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  distanceKm        Float?                                   // computed at creation
+  deliveryFee       Float                                    // computed via deliveryFeeService
+  itemsSubtotal     Float?                                   // per-item known at checkout; per-kg null until weighed
+  weighedKg         Float?                                   // per-kg only, set at weigh-in
+  finalTotal        Float?                                   // subtotal(+weighed) + fee - voucher
+  voucherDiscount   Float        @default(0)
 
-  laundromatId    Int
-  laundromat      Laundromat  @relation(fields: [laundromatId], references: [id], onDelete: Cascade)
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+
+  customerId        Int
+  customer          User         @relation("CustomerOrders", fields: [customerId], references: [id], onDelete: Cascade)
+  laundromatId      Int
+  laundromat        Laundromat   @relation(fields: [laundromatId], references: [id], onDelete: Cascade)
+  driverId          Int?
+  driver            DriverProfile? @relation("DriverOrders", fields: [driverId], references: [id])
+
+  items             OrderItem[]
+  offers            DeliveryOffer[]
+  payments          Payment[]
+  declaredItems     DeclaredItem[]
+  warrantyClaims    WarrantyClaim[]
+  appliedVoucherId  Int?         @unique
+  appliedVoucher    Voucher?     @relation(fields: [appliedVoucherId], references: [id])
+}
+
+model OrderItem {
+  id           Int         @id @default(autoincrement())
+  orderId      Int
+  order        Order       @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  serviceId    Int
+  serviceName  String                                       // snapshot for receipt stability
+  unit         PricingUnit
+  unitPrice    Float                                        // snapshot
+  quantity     Float                                        // pieces (per-item) or estimated kg (per-kg)
+  lineTotal    Float?                                       // null for per-kg until weighed
+  notes        String?
+}
+
+model DeliveryOffer {
+  id           Int           @id @default(autoincrement())
+  orderId      Int
+  order        Order         @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  driverId     Int
+  driver       DriverProfile @relation(fields: [driverId], references: [id], onDelete: Cascade)
+  phase        String                                       // "PICKUP" or "DELIVERY"
+  status       OfferStatus   @default(OFFERED)
+  createdAt    DateTime      @default(now())
+  respondedAt  DateTime?
+
+  @@index([driverId, status])
+}
+
+model Payment {
+  id              Int           @id @default(autoincrement())
+  orderId         Int
+  order           Order         @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  amount          Float
+  method          String?                                   // filled from Midtrans notification
+  status          PaymentStatus @default(PENDING)
+  midtransOrderId String        @unique                     // our reference sent to Midtrans
+  snapToken       String?
+  rawNotification Json?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+}
+
+model PointsTransaction {
+  id          Int       @id @default(autoincrement())
+  userId      Int
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  delta       Int                                            // +earned, -redeemed
+  reason      String                                         // "ORDER_COMPLETED", "VOUCHER_REDEEM"
+  orderId     Int?
+  createdAt   DateTime  @default(now())
+}
+
+model Voucher {
+  id          Int       @id @default(autoincrement())
+  userId      Int
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  amountOff   Float     @default(10000)
+  used        Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+  usedAt      DateTime?
+  order       Order?    @relation
+}
+
+model DeclaredItem {
+  id                Int      @id @default(autoincrement())
+  orderId           Int
+  order             Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  label             String
+  photoUrl          String
+  confirmedReceived Boolean  @default(false)                 // set true at partner intake
+  discrepancyNote   String?
+  createdAt         DateTime @default(now())
+
+  claims            WarrantyClaim[]
+}
+
+model WarrantyClaim {
+  id             Int                 @id @default(autoincrement())
+  orderId        Int
+  order          Order               @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  declaredItemId Int
+  declaredItem   DeclaredItem        @relation(fields: [declaredItemId], references: [id], onDelete: Cascade)
+  description    String
+  photoUrls      String[]
+  status         WarrantyClaimStatus @default(SUBMITTED)
+  resolutionNote String?
+  payoutAmount   Float?                                      // attributed to Washly (platform), informational
+  payoutFundedBy String?             @default("WASHLY")
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
 }

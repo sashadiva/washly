@@ -1,22 +1,8 @@
 import { Router, Request, Response } from 'express';
 import { prisma } from '../config/prisma.js';
+import { toCustomerLaundromat } from '../services/laundromatMapper.js';
 
 const router = Router();
-
-// Haversine formula to compute great-circle distance in kilometers
-function getDistanceKm(lat1: number, lon1: number, lat2: number, lon2: number): number {
-  const R = 6371;
-  const dLat = (lat2 - lat1) * (Math.PI / 180);
-  const dLon = (lon2 - lon1) * (Math.PI / 180);
-  const a =
-    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos(lat1 * (Math.PI / 180)) *
-      Math.cos(lat2 * (Math.PI / 180)) *
-      Math.sin(dLon / 2) *
-      Math.sin(dLon / 2);
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  return R * c;
-}
 
 interface LaundromatQuery {
   tags?: string;
@@ -27,6 +13,11 @@ interface LaundromatQuery {
 
 // ---------------------------------------------------------------------------
 // GET /api/laundromats (Discovery Feed with Tag Filters & Distance/Rating Sort)
+//
+// Customer-facing: responses omit exact address and raw lat/lng (Requirement
+// 3.4). Only distanceKm (computed server-side) and a coarse areaLabel are
+// exposed. When customer coords are absent, the list still returns but without
+// distance, and distance sorting is skipped.
 // ---------------------------------------------------------------------------
 router.get('/', async (req: Request<{}, {}, {}, LaundromatQuery>, res: Response) => {
   try {
@@ -60,34 +51,31 @@ router.get('/', async (req: Request<{}, {}, {}, LaundromatQuery>, res: Response)
       },
     });
 
-    let results = laundromats.map((shop) => {
-      const flattenedTags = shop.tags ? shop.tags.map((t) => t.tag.name) : [];
-      let distanceKm: number | null = null;
+    const lat = userLat ? parseFloat(userLat) : null;
+    const lng = userLng ? parseFloat(userLng) : null;
+    const hasCoords = lat != null && lng != null && Number.isFinite(lat) && Number.isFinite(lng);
 
-      if (userLat && userLng) {
-        distanceKm = getDistanceKm(
-          parseFloat(userLat),
-          parseFloat(userLng),
-          shop.latitude,
-          shop.longitude
-        );
-      }
-
-      return {
-        id: shop.id,
-        name: shop.name,
-        address: shop.address,
-        rating: shop.rating,
-        reviewCount: shop.reviewCount,
-        imageUrl: shop.imageUrl,
-        tags: flattenedTags,
-        distanceKm: distanceKm ? parseFloat(distanceKm.toFixed(1)) : null,
-      };
-    });
+    let results = laundromats.map((shop) =>
+      toCustomerLaundromat(
+        {
+          id: shop.id,
+          name: shop.name,
+          areaLabel: shop.areaLabel,
+          latitude: shop.latitude,
+          longitude: shop.longitude,
+          imageUrl: shop.imageUrl,
+          rating: shop.rating,
+          reviewCount: shop.reviewCount,
+          tags: shop.tags ? shop.tags.map((t) => t.tag.name) : [],
+        },
+        lat,
+        lng
+      )
+    );
 
     if (sort === 'rating') {
       results.sort((a, b) => b.rating - a.rating);
-    } else if (sort === 'distance' && userLat && userLng) {
+    } else if (sort === 'distance' && hasCoords) {
       results.sort((a, b) => (a.distanceKm ?? 0) - (b.distanceKm ?? 0));
     }
 
@@ -100,8 +88,11 @@ router.get('/', async (req: Request<{}, {}, {}, LaundromatQuery>, res: Response)
 
 // ---------------------------------------------------------------------------
 // GET /api/laundromats/:id (Store Details with Dynamic Services & Reviews)
+//
+// Customer-facing: no exact address or coords (Requirement 3.4). Distance is
+// included when the caller supplies userLat/userLng.
 // ---------------------------------------------------------------------------
-router.get('/:id', async (req: Request<{ id: string }>, res: Response) => {
+router.get('/:id', async (req: Request<{ id: string }, {}, {}, LaundromatQuery>, res: Response) => {
   try {
     const storeId = parseInt(req.params.id, 10);
     if (isNaN(storeId)) {
@@ -132,31 +123,43 @@ router.get('/:id', async (req: Request<{ id: string }>, res: Response) => {
       return res.status(404).json({ error: 'Laundromat not found' });
     }
 
-    res.json({
-      id: store.id,
-      name: store.name,
-      description: store.description,
-      address: store.address,
-      rating: store.rating,
-      reviewCount: store.reviewCount,
-      imageUrl: store.imageUrl,
-      tags: store.tags.map((t) => t.tag.name),
-      services: store.services.map((s) => ({
-        id: s.id,
-        name: s.name,
-        description: s.description,
-        price: s.price,
-        unit: s.unit,
-        imageUrl: s.imageUrl,
-      })),
-      reviews: store.reviews.map((r) => ({
-        id: r.id,
-        rating: r.rating,
-        comment: r.comment,
-        userName: r.user.name,
-        createdAt: r.createdAt,
-      })),
-    });
+    const { userLat, userLng } = req.query;
+    const lat = userLat ? parseFloat(userLat) : null;
+    const lng = userLng ? parseFloat(userLng) : null;
+
+    const payload = toCustomerLaundromat(
+      {
+        id: store.id,
+        name: store.name,
+        description: store.description,
+        areaLabel: store.areaLabel,
+        latitude: store.latitude,
+        longitude: store.longitude,
+        imageUrl: store.imageUrl,
+        rating: store.rating,
+        reviewCount: store.reviewCount,
+        tags: store.tags.map((t) => t.tag.name),
+        services: store.services.map((s) => ({
+          id: s.id,
+          name: s.name,
+          description: s.description,
+          price: s.price,
+          unit: s.unit,
+          imageUrl: s.imageUrl,
+        })),
+        reviews: store.reviews.map((r) => ({
+          id: r.id,
+          rating: r.rating,
+          comment: r.comment,
+          userName: r.user.name,
+          createdAt: r.createdAt,
+        })),
+      },
+      lat,
+      lng
+    );
+
+    res.json(payload);
   } catch (error: any) {
     console.error('Error fetching laundromat detail:', error);
     res.status(500).json({ error: error.message });

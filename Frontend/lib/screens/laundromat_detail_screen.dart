@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../core/auth_store.dart';
+import '../core/cart_store.dart';
 import '../models/cart_item.dart';
 import '../models/laundry_service_item.dart';
 import '../models/laundromat_detail.dart';
@@ -21,8 +24,6 @@ class _LaundromatDetailScreenState extends State<LaundromatDetailScreen>
   late TabController _tabController;
   late Future<LaundromatDetail> _detailFuture;
 
-  final Map<int, CartItem> _cart = {};
-
   @override
   void initState() {
     super.initState();
@@ -43,9 +44,11 @@ class _LaundromatDetailScreenState extends State<LaundromatDetailScreen>
     });
   }
 
-  void _showAddItemModal(LaundryServiceItem item) {
-    int quantity = _cart[item.id]?.quantity ?? (item.isKilo ? 3 : 1);
-    final notesCtrl = TextEditingController(text: _cart[item.id]?.notes ?? '');
+  void _showAddItemModal(LaundromatDetail store, LaundryServiceItem item) {
+    final cart = context.read<CartStore>();
+    final existing = cart.itemFor(item.id);
+    int quantity = existing?.quantity ?? (item.isKilo ? 3 : 1);
+    final notesCtrl = TextEditingController(text: existing?.notes ?? '');
 
     showModalBottomSheet(
       context: context,
@@ -151,18 +154,22 @@ class _LaundromatDetailScreenState extends State<LaundromatDetailScreen>
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
-                    onPressed: () {
-                      setState(() {
-                        _cart[item.id] = CartItem(
+                    onPressed: () async {
+                      final ok = await _ensureCartScope(store);
+                      if (!ok) return;
+                      cart.setItem(
+                        store.id,
+                        store.name,
+                        CartItem(
                           serviceId: item.id,
                           serviceName: item.name,
                           isKilo: item.isKilo,
                           unitPrice: item.price,
                           quantity: quantity,
                           notes: notesCtrl.text.trim(),
-                        );
-                      });
-                      Navigator.pop(ctx);
+                        ),
+                      );
+                      if (ctx.mounted) Navigator.pop(ctx);
                     },
                     child: Text('Add to Basket • Rp ${(item.price * quantity).toStringAsFixed(0)}'),
                   ),
@@ -173,6 +180,39 @@ class _LaundromatDetailScreenState extends State<LaundromatDetailScreen>
         },
       ),
     );
+  }
+
+  /// If the cart holds items from another laundromat, ask to clear it first.
+  /// Returns true if it's safe to proceed adding for [store].
+  Future<bool> _ensureCartScope(LaundromatDetail store) async {
+    final cart = context.read<CartStore>();
+    if (!cart.wouldReplace(store.id)) return true;
+
+    final replace = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Start a new basket?'),
+        content: Text(
+          'Your basket has items from ${cart.laundromatName ?? 'another laundromat'}. '
+          'Adding this will clear it and start a new basket at ${store.name}.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Clear & add'),
+          ),
+        ],
+      ),
+    );
+    if (replace == true) {
+      cart.clear();
+      return true;
+    }
+    return false;
   }
 
   void _showAddReviewDialog(int storeId) {
@@ -214,17 +254,25 @@ class _LaundromatDetailScreenState extends State<LaundromatDetailScreen>
             ),
             ElevatedButton(
               onPressed: () async {
+                final userId = context.read<AuthStore>().currentUser?.id;
+                final messenger = ScaffoldMessenger.of(context);
+                if (userId == null) {
+                  messenger.showSnackBar(
+                    const SnackBar(content: Text('Please sign in to review.')),
+                  );
+                  return;
+                }
                 try {
                   await _service.addReview(
                     laundromatId: storeId,
-                    userId: 1,
+                    userId: userId,
                     rating: selectedRating,
                     comment: commentCtrl.text.trim(),
                   );
                   if (ctx.mounted) Navigator.pop(ctx);
                   _refresh();
                 } catch (e) {
-                  ScaffoldMessenger.of(context).showSnackBar(
+                  messenger.showSnackBar(
                     SnackBar(content: Text('Failed: $e')),
                   );
                 }
@@ -250,8 +298,12 @@ class _LaundromatDetailScreenState extends State<LaundromatDetailScreen>
         }
 
         final store = snapshot.data!;
-        final int totalCartCount = _cart.values.fold(0, (sum, item) => sum + item.quantity);
-        final double totalCartPrice = _cart.values.fold(0.0, (sum, item) => sum + item.totalPrice);
+        final cart = context.watch<CartStore>();
+        // Only reflect this laundromat's items in the bar (the cart may hold
+        // another store's items, but this screen shows only this store's).
+        final bool cartForThisStore = cart.laundromatId == store.id;
+        final int totalCartCount = cartForThisStore ? cart.itemCount : 0;
+        final double totalCartPrice = cartForThisStore ? cart.subtotal : 0;
 
         return Scaffold(
           body: NestedScrollView(
@@ -286,7 +338,8 @@ class _LaundromatDetailScreenState extends State<LaundromatDetailScreen>
                           ],
                         ),
                         const SizedBox(height: AppSpacing.xs),
-                        Text(store.address, style: AppTypography.body),
+                        Text(store.areaLabel ?? 'Area hidden until pickup',
+                            style: AppTypography.body),
                       ],
                     ),
                   ),
@@ -327,7 +380,9 @@ class _LaundromatDetailScreenState extends State<LaundromatDetailScreen>
                         ),
                         itemBuilder: (context, i) {
                           final item = store.services[i];
-                          final inCart = _cart[item.id];
+                          final inCart = cartForThisStore
+                              ? cart.itemFor(item.id)
+                              : null;
 
                           return Padding(
                             padding: const EdgeInsets.symmetric(
@@ -375,7 +430,7 @@ class _LaundromatDetailScreenState extends State<LaundromatDetailScreen>
                                 const SizedBox(width: AppSpacing.md),
                                 inCart == null
                                     ? InkWell(
-                                        onTap: () => _showAddItemModal(item),
+                                        onTap: () => _showAddItemModal(store, item),
                                         borderRadius: BorderRadius.circular(AppRadius.pill),
                                         child: Container(
                                           width: 38,
@@ -407,15 +462,8 @@ class _LaundromatDetailScreenState extends State<LaundromatDetailScreen>
                                           mainAxisSize: MainAxisSize.min,
                                           children: [
                                             InkWell(
-                                              onTap: () {
-                                                setState(() {
-                                                  if (inCart.quantity > 1) {
-                                                    inCart.quantity--;
-                                                  } else {
-                                                    _cart.remove(item.id);
-                                                  }
-                                                });
-                                              },
+                                              onTap: () =>
+                                                  cart.decrement(item.id),
                                               child: const Padding(
                                                 padding: EdgeInsets.all(AppSpacing.xs),
                                                 child: Icon(Icons.remove, size: 18, color: AppColors.error),
@@ -429,7 +477,8 @@ class _LaundromatDetailScreenState extends State<LaundromatDetailScreen>
                                               ),
                                             ),
                                             InkWell(
-                                              onTap: () => setState(() => inCart.quantity++),
+                                              onTap: () =>
+                                                  cart.increment(item.id),
                                               child: const Padding(
                                                 padding: EdgeInsets.all(AppSpacing.xs),
                                                 child: Icon(Icons.add, size: 18, color: AppColors.primary),
@@ -532,7 +581,9 @@ class _LaundromatDetailScreenState extends State<LaundromatDetailScreen>
           ),
 
           // Floating Blue Cart Bar
-          bottomSheet: _cart.isNotEmpty && _tabController.index == 0
+          bottomSheet: cartForThisStore &&
+                  cart.isNotEmpty &&
+                  _tabController.index == 0
               ? Container(
                   padding: const EdgeInsets.symmetric(
                     horizontal: AppSpacing.lg,
@@ -555,7 +606,7 @@ class _LaundromatDetailScreenState extends State<LaundromatDetailScreen>
                         MaterialPageRoute(
                           builder: (_) => CheckoutScreen(
                             store: store,
-                            cart: _cart.values.toList(),
+                            cart: cart.items,
                           ),
                         ),
                       );

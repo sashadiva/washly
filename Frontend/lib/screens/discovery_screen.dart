@@ -5,7 +5,9 @@ import '../theme/app_theme.dart';
 import 'laundromat_detail_screen.dart';
 
 class DiscoveryScreen extends StatefulWidget {
-  const DiscoveryScreen({super.key});
+  /// Optional tag to pre-select the filter with (e.g. from a Home shortcut).
+  final String? initialTag;
+  const DiscoveryScreen({super.key, this.initialTag});
 
   @override
   State<DiscoveryScreen> createState() => _DiscoveryScreenState();
@@ -31,6 +33,9 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
   @override
   void initState() {
     super.initState();
+    if (widget.initialTag != null && widget.initialTag!.isNotEmpty) {
+      _selectedTags.add(widget.initialTag!.toLowerCase());
+    }
     _loadData();
   }
 
@@ -150,6 +155,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
               vertical: AppSpacing.sm,
             ),
             child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Flexible(
                   child: OutlinedButton.icon(
@@ -163,20 +169,27 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
                     ),
                   ),
                 ),
-                const Spacer(),
-                DropdownButtonHideUnderline(
-                  child: DropdownButton<String>(
-                    value: _currentSort,
-                    style: AppTypography.subheading,
-                    items: const [
-                      DropdownMenuItem(value: 'rating', child: Text('Top Rated')),
-                      DropdownMenuItem(value: 'distance', child: Text('Nearest')),
-                    ],
-                    onChanged: (val) {
-                      if (val == null) return;
-                      _currentSort = val;
-                      _loadData();
-                    },
+                const SizedBox(width: AppSpacing.md),
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: DropdownButtonHideUnderline(
+                    child: DropdownButton<String>(
+                      value: _currentSort,
+                      isDense: true,
+                      style: AppTypography.subheading,
+                      borderRadius: BorderRadius.circular(AppRadius.md),
+                      items: const [
+                        DropdownMenuItem(
+                            value: 'rating', child: Text('Top Rated')),
+                        DropdownMenuItem(
+                            value: 'distance', child: Text('Nearest')),
+                      ],
+                      onChanged: (val) {
+                        if (val == null) return;
+                        _currentSort = val;
+                        _loadData();
+                      },
+                    ),
                   ),
                 ),
               ],
@@ -217,15 +230,21 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
 
 class LaundromatListingCard extends StatelessWidget {
   final Laundromat store;
-  const LaundromatListingCard({super.key, required this.store});
+
+  /// Optional margin override. Defaults to Discovery's list spacing; the Home
+  /// "Nearby" section passes its own so the card aligns with home content.
+  final EdgeInsetsGeometry? margin;
+
+  const LaundromatListingCard({super.key, required this.store, this.margin});
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.lg,
-        vertical: AppSpacing.sm,
-      ),
+      margin: margin ??
+          const EdgeInsets.symmetric(
+            horizontal: AppSpacing.lg,
+            vertical: AppSpacing.sm,
+          ),
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(AppRadius.lg),
@@ -295,7 +314,7 @@ class LaundromatListingCard extends StatelessWidget {
                   ),
                   const SizedBox(height: AppSpacing.xs),
                   Text(
-                    store.address,
+                    store.areaLabel ?? 'Area shown after order',
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: AppTypography.body,
