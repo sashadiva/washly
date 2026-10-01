@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../l10n/app_localizations.dart';
 import '../models/order.dart';
 import '../theme/app_theme.dart';
 
@@ -16,22 +17,42 @@ class StatusTimeline extends StatefulWidget {
   const StatusTimeline({super.key, required this.order});
 
   static const List<_Stage> _stages = [
-    _Stage('Placed', Icons.receipt_long, [OrderStatus.pendingAcceptance]),
-    _Stage('Accepted', Icons.check_circle_outline, [OrderStatus.accepted]),
-    _Stage('Picked up', Icons.local_shipping_outlined, [
+    _Stage('placed', Icons.receipt_long, [OrderStatus.pendingAcceptance]),
+    _Stage('accepted', Icons.check_circle_outline, [OrderStatus.accepted]),
+    _Stage('pickup', Icons.local_shipping_outlined, [
       OrderStatus.driverAssigned,
       OrderStatus.pickedUp,
+      OrderStatus.atLaundromat,
       OrderStatus.weighedAwaitingConfirm,
       OrderStatus.awaitingPayment,
     ]),
-    _Stage('Washing', Icons.local_laundry_service_outlined,
+    _Stage('washing', Icons.local_laundry_service_outlined,
         [OrderStatus.washing]),
-    _Stage('On the way', Icons.delivery_dining, [
+    _Stage('onTheWay', Icons.delivery_dining, [
       OrderStatus.readyForDelivery,
       OrderStatus.outForDelivery,
     ]),
-    _Stage('Completed', Icons.verified, [OrderStatus.completed]),
+    _Stage('completed', Icons.verified, [OrderStatus.completed]),
   ];
+
+  static String _stageLabel(AppLocalizations l10n, String id) {
+    switch (id) {
+      case 'placed':
+        return l10n.timelinePlaced;
+      case 'accepted':
+        return l10n.timelineAccepted;
+      case 'pickup':
+        return l10n.timelinePickup;
+      case 'washing':
+        return l10n.timelineWashing;
+      case 'onTheWay':
+        return l10n.timelineOnTheWay;
+      case 'completed':
+        return l10n.timelineCompleted;
+      default:
+        return id;
+    }
+  }
 
   @override
   State<StatusTimeline> createState() => _StatusTimelineState();
@@ -68,6 +89,7 @@ class _StatusTimelineState extends State<StatusTimeline>
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     if (widget.order.status == OrderStatus.cancelled) {
       return Container(
         padding: const EdgeInsets.all(AppSpacing.md),
@@ -80,7 +102,7 @@ class _StatusTimelineState extends State<StatusTimeline>
           children: [
             const Icon(Icons.cancel, color: AppColors.error),
             const SizedBox(width: AppSpacing.sm),
-            Text('Order cancelled',
+            Text(l10n.timelineOrderCancelled,
                 style: AppTypography.subheading
                     .copyWith(color: AppColors.error)),
           ],
@@ -106,15 +128,14 @@ class _StatusTimelineState extends State<StatusTimeline>
             children: [
               Column(
                 children: [
-                  _node(stages[i], isDone: isDone, isCurrent: isCurrent),
+                  _node(isDone: isDone, isCurrent: isCurrent),
                   if (!isLast)
                     Expanded(
                       child: Container(
-                        width: 3,
+                        width: 2,
                         margin: const EdgeInsets.symmetric(vertical: 2),
                         decoration: BoxDecoration(
-                          color:
-                              isDone ? AppColors.primary : AppColors.border,
+                          color: isDone ? AppColors.primary : AppColors.border,
                           borderRadius: BorderRadius.circular(2),
                         ),
                       ),
@@ -124,23 +145,26 @@ class _StatusTimelineState extends State<StatusTimeline>
               const SizedBox(width: AppSpacing.md),
               Padding(
                 padding: EdgeInsets.only(
-                  top: 8,
+                  // Nudge the label to vertically centre with the small circle.
+                  top: 4,
                   bottom: isLast ? 0 : AppSpacing.xl,
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      stages[i].label,
+                      StatusTimeline._stageLabel(l10n, stages[i].label),
                       style: AppTypography.subheading.copyWith(
                         color: reached
                             ? AppColors.textPrimary
                             : AppColors.textMuted,
+                        fontWeight:
+                            isCurrent ? FontWeight.bold : FontWeight.w600,
                       ),
                     ),
                     if (isCurrent) ...[
                       const SizedBox(height: 2),
-                      Text(widget.order.status.label,
+                      Text(widget.order.status.localizedLabel(l10n),
                           style: AppTypography.caption
                               .copyWith(color: AppColors.primaryDark)),
                     ],
@@ -154,42 +178,51 @@ class _StatusTimelineState extends State<StatusTimeline>
     );
   }
 
-  /// A stage node. Every circle has an outline ring. The current stage adds a
-  /// gentle pulsing halo behind it.
-  Widget _node(_Stage stage, {required bool isDone, required bool isCurrent}) {
-    const double size = 34;
-    const double box = 54;
+  /// A stage node matching the driver status bar's circle design, but used in
+  /// the vertical timeline: done = filled with a check, current = filled with a
+  /// white inner dot and a pulsing halo, upcoming = empty outline.
+  Widget _node({required bool isDone, required bool isCurrent}) {
+    const double dot = 18;
+    const double box = 30;
 
     final circle = Container(
-      width: size,
-      height: size,
+      width: dot,
+      height: dot,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         color: isDone || isCurrent ? AppColors.primary : AppColors.surface,
         border: Border.all(
-          color: isDone
-              ? AppColors.primaryDark
-              : (isCurrent ? AppColors.primaryLight : AppColors.border),
-          width: isCurrent ? 3 : 2,
+          color: isDone || isCurrent ? AppColors.primary : AppColors.border,
+          width: 2,
         ),
       ),
-      child: Icon(
-        isDone ? Icons.check : stage.icon,
-        size: 18,
-        color: isDone || isCurrent ? Colors.white : AppColors.textMuted,
-      ),
+      child: isDone
+          ? const Icon(Icons.check, size: 11, color: Colors.white)
+          : (isCurrent
+              ? const Center(
+                  child: SizedBox(
+                    width: 6,
+                    height: 6,
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                )
+              : null),
     );
 
     if (!isCurrent) {
       return SizedBox(
         width: box,
-        height: size,
+        height: box,
         child: Center(child: circle),
       );
     }
 
-    // Current stage: a pulsing halo (framework-driven, non-interactive) behind
-    // the node.
+    // Current stage: pulsing halo behind the dot (framework-driven, web-safe).
     return SizedBox(
       width: box,
       height: box,
@@ -198,14 +231,14 @@ class _StatusTimelineState extends State<StatusTimeline>
         children: [
           IgnorePointer(
             child: FadeTransition(
-              opacity: Tween<double>(begin: 0.45, end: 0.0).animate(_pulse),
+              opacity: Tween<double>(begin: 0.5, end: 0.0).animate(_pulse),
               child: ScaleTransition(
-                scale: Tween<double>(begin: 0.9, end: 1.8).animate(
+                scale: Tween<double>(begin: 0.8, end: 1.7).animate(
                   CurvedAnimation(parent: _pulse, curve: Curves.easeOut),
                 ),
                 child: Container(
-                  width: size,
-                  height: size,
+                  width: dot,
+                  height: dot,
                   decoration: const BoxDecoration(
                     shape: BoxShape.circle,
                     color: AppColors.primary,
@@ -266,7 +299,7 @@ class StatusChip extends StatelessWidget {
         borderRadius: BorderRadius.circular(AppRadius.pill),
       ),
       child: Text(
-        status.label,
+        status.localizedLabel(AppLocalizations.of(context)),
         style: AppTypography.caption.copyWith(color: fg),
       ),
     );

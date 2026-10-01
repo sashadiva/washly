@@ -12,8 +12,10 @@
  *   ACCEPTED
  *     -> DRIVER_ASSIGNED     (driver accepts pickup offer)
  *   DRIVER_ASSIGNED
- *     -> PICKED_UP           (driver marks picked up)
+ *     -> PICKED_UP           (driver collects laundry from the customer)
  *   PICKED_UP
+ *     -> AT_LAUNDROMAT       (driver drops the laundry at the laundromat)
+ *   AT_LAUNDROMAT
  *     -> WEIGHED_AWAITING_CONFIRM   (per-kg: partner weighs)
  *     -> WASHING                    (per-item: already paid at checkout)
  *   WEIGHED_AWAITING_CONFIRM
@@ -35,6 +37,7 @@ export type OrderAction =
   | 'reject'
   | 'assignDriver'
   | 'markPickedUp'
+  | 'arriveAtLaundromat'
   | 'enterWeight'
   | 'approveWeight'
   | 'confirmPayment'
@@ -81,8 +84,13 @@ const TRANSITIONS: Record<OrderAction, TransitionRule> = {
     to: 'PICKED_UP',
     roles: ['DRIVER'],
   },
-  enterWeight: {
+  arriveAtLaundromat: {
     from: ['PICKED_UP'],
+    to: 'AT_LAUNDROMAT',
+    roles: ['DRIVER'],
+  },
+  enterWeight: {
+    from: ['AT_LAUNDROMAT'],
     to: 'WEIGHED_AWAITING_CONFIRM',
     roles: ['PARTNER'],
   },
@@ -92,9 +100,9 @@ const TRANSITIONS: Record<OrderAction, TransitionRule> = {
     roles: ['CUSTOMER'],
   },
   confirmPayment: {
-    // Per-kg: AWAITING_PAYMENT -> WASHING. Per-item: PICKED_UP -> WASHING
-    // (already paid at checkout, so payment confirmation advances after pickup).
-    from: ['AWAITING_PAYMENT', 'PICKED_UP'],
+    // Per-kg: AWAITING_PAYMENT -> WASHING. Per-item: AT_LAUNDROMAT -> WASHING
+    // (already paid at checkout, so it advances once the laundry has arrived).
+    from: ['AWAITING_PAYMENT', 'AT_LAUNDROMAT'],
     to: 'WASHING',
     roles: ['SYSTEM'],
   },

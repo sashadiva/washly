@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../l10n/app_localizations.dart';
 import '../../theme/app_theme.dart';
 import 'login_screen.dart';
 import 'register_customer_screen.dart';
@@ -11,6 +12,7 @@ class RoleSelectScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
       body: SafeArea(
         child: Padding(
@@ -22,44 +24,44 @@ class RoleSelectScreen extends StatelessWidget {
               const Icon(Icons.local_laundry_service,
                   size: 64, color: AppColors.primary),
               const SizedBox(height: AppSpacing.lg),
-              const Text('Welcome to Washly',
+              Text(l10n.roleSelectTitle,
                   textAlign: TextAlign.center, style: AppTypography.heading1),
               const SizedBox(height: AppSpacing.sm),
-              const Text(
-                'Choose how you want to join.',
+              Text(
+                l10n.roleSelectSubtitle,
                 textAlign: TextAlign.center,
                 style: AppTypography.body,
               ),
               const SizedBox(height: AppSpacing.xxl),
               _RoleCard(
                 icon: Icons.person_outline,
-                title: 'Customer',
-                subtitle: 'Order laundry pickup & delivery',
+                title: l10n.roleSelectCustomerTitle,
+                subtitle: l10n.roleSelectCustomerSubtitle,
                 onTap: () => _go(context, const RegisterCustomerScreen()),
               ),
               const SizedBox(height: AppSpacing.md),
               _RoleCard(
                 icon: Icons.storefront_outlined,
-                title: 'Laundromat Partner',
-                subtitle: 'Manage your shop and orders',
+                title: l10n.roleSelectPartnerTitle,
+                subtitle: l10n.roleSelectPartnerSubtitle,
                 onTap: () => _go(context, const RegisterPartnerScreen()),
               ),
               const SizedBox(height: AppSpacing.md),
               _RoleCard(
                 icon: Icons.two_wheeler_outlined,
-                title: 'Driver',
-                subtitle: 'Pick up and deliver orders',
+                title: l10n.roleSelectDriverTitle,
+                subtitle: l10n.roleSelectDriverSubtitle,
                 onTap: () => _go(context, const RegisterDriverScreen()),
               ),
               const Spacer(),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Text('Already have an account?',
+                  Text(l10n.roleSelectHaveAccountQuestion,
                       style: AppTypography.body),
                   TextButton(
                     onPressed: () => _go(context, const LoginScreen()),
-                    child: Text('Log in',
+                    child: Text(l10n.roleSelectLoginAction,
                         style: AppTypography.subheading
                             .copyWith(color: AppColors.primary)),
                   ),

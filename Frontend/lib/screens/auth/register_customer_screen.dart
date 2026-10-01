@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/auth_store.dart';
 import '../../core/session.dart';
+import '../../l10n/app_localizations.dart';
 import '../../services/auth_service.dart';
 import '../../theme/app_theme.dart';
 
@@ -64,9 +65,10 @@ class _RegisterCustomerScreenState extends State<RegisterCustomerScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Customer sign up'),
+        title: Text(l10n.registerCustomerTitle),
         bottom: const PreferredSize(
           preferredSize: Size.fromHeight(1),
           child: Divider(height: 1, thickness: 1, color: AppColors.border),
@@ -81,41 +83,48 @@ class _RegisterCustomerScreenState extends State<RegisterCustomerScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                AuthField(controller: _name, label: 'Full name'),
+                AuthField(
+                  controller: _name,
+                  label: l10n.commonFullNameLabel,
+                  requiredMessage: l10n.commonFieldRequired(
+                      l10n.commonFullNameLabel),
+                ),
                 const SizedBox(height: AppSpacing.lg),
                 AuthField(
                   controller: _email,
-                  label: 'Email',
+                  label: l10n.commonEmailLabel,
                   keyboardType: TextInputType.emailAddress,
-                  validator: AuthValidators.email,
+                  validator: AuthValidators.email(l10n),
                 ),
                 const SizedBox(height: AppSpacing.lg),
                 AuthField(
                   controller: _phone,
-                  label: 'Phone',
+                  label: l10n.commonPhoneLabel,
                   keyboardType: TextInputType.phone,
+                  requiredMessage:
+                      l10n.commonFieldRequired(l10n.commonPhoneLabel),
                 ),
                 const SizedBox(height: AppSpacing.lg),
                 AuthField(
                   controller: _password,
-                  label: 'Password',
+                  label: l10n.commonPasswordLabel,
                   obscure: true,
-                  validator: AuthValidators.password,
+                  validator: AuthValidators.password(l10n),
                 ),
                 const SizedBox(height: AppSpacing.lg),
                 AuthField(
                   controller: _confirmPassword,
-                  label: 'Confirm password',
+                  label: l10n.commonConfirmPasswordLabel,
                   obscure: true,
-                  validator:
-                      AuthValidators.confirmPassword(() => _password.text),
+                  validator: AuthValidators.confirmPassword(
+                      l10n, () => _password.text),
                 ),
                 const SizedBox(height: AppSpacing.xxl),
                 ElevatedButton(
                   onPressed: _submitting ? null : _submit,
                   child: _submitting
                       ? const AuthButtonSpinner()
-                      : const Text('Create account'),
+                      : Text(l10n.commonCreateAccount),
                 ),
               ],
             ),
@@ -137,6 +146,11 @@ class AuthField extends StatefulWidget {
   final TextInputType? keyboardType;
   final String? Function(String?)? validator;
 
+  /// Message shown by the default "required" validator. When null, falls back
+  /// to a plain "<label> is required" string (used only when no [validator] is
+  /// supplied).
+  final String? requiredMessage;
+
   const AuthField({
     super.key,
     required this.controller,
@@ -144,6 +158,7 @@ class AuthField extends StatefulWidget {
     this.obscure = false,
     this.keyboardType,
     this.validator,
+    this.requiredMessage,
   });
 
   @override
@@ -161,6 +176,7 @@ class _AuthFieldState extends State<AuthField> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return TextFormField(
       controller: widget.controller,
       obscureText: _obscured,
@@ -172,14 +188,18 @@ class _AuthFieldState extends State<AuthField> {
             ? IconButton(
                 icon: Icon(
                     _obscured ? Icons.visibility_off : Icons.visibility),
-                tooltip: _obscured ? 'Show password' : 'Hide password',
+                tooltip: _obscured
+                    ? l10n.commonShowPassword
+                    : l10n.commonHidePassword,
                 onPressed: () => setState(() => _obscured = !_obscured),
               )
             : null,
       ),
       validator: widget.validator ??
-          (v) =>
-              (v == null || v.trim().isEmpty) ? '${widget.label} is required' : null,
+          (v) => (v == null || v.trim().isEmpty)
+              ? (widget.requiredMessage ??
+                  l10n.commonFieldRequired(widget.label))
+              : null,
     );
   }
 }
@@ -187,25 +207,30 @@ class _AuthFieldState extends State<AuthField> {
 class AuthValidators {
   AuthValidators._();
 
-  static String? email(String? v) {
-    if (v == null || v.trim().isEmpty) return 'Email is required';
-    final re = RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$');
-    if (!re.hasMatch(v.trim())) return 'Enter a valid email';
-    return null;
+  static String? Function(String?) email(AppLocalizations l10n) {
+    return (v) {
+      if (v == null || v.trim().isEmpty) return l10n.commonEmailRequired;
+      final re = RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$');
+      if (!re.hasMatch(v.trim())) return l10n.commonEmailInvalid;
+      return null;
+    };
   }
 
-  static String? password(String? v) {
-    if (v == null || v.isEmpty) return 'Password is required';
-    if (v.length < 6) return 'At least 6 characters';
-    return null;
+  static String? Function(String?) password(AppLocalizations l10n) {
+    return (v) {
+      if (v == null || v.isEmpty) return l10n.commonPasswordRequired;
+      if (v.length < 6) return l10n.commonPasswordTooShort;
+      return null;
+    };
   }
 
   /// Returns a validator that checks the confirm-password field matches the
   /// original password value.
-  static String? Function(String?) confirmPassword(String Function() original) {
+  static String? Function(String?) confirmPassword(
+      AppLocalizations l10n, String Function() original) {
     return (v) {
-      if (v == null || v.isEmpty) return 'Please confirm your password';
-      if (v != original()) return 'Passwords do not match';
+      if (v == null || v.isEmpty) return l10n.commonConfirmPasswordRequired;
+      if (v != original()) return l10n.commonPasswordsDoNotMatch;
       return null;
     };
   }

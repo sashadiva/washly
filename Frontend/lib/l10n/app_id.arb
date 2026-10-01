@@ -1,0 +1,856 @@
+{
+  "@@locale": "id",
+
+  "appTitle": "Washly",
+
+  "commonCancel": "Batal",
+  "commonSave": "Simpan",
+  "commonDone": "Selesai",
+  "commonAdd": "Tambah",
+  "commonRemove": "Hapus",
+  "commonDelete": "Hapus",
+  "commonRetry": "Coba lagi",
+  "commonClose": "Tutup",
+  "commonApply": "Terapkan",
+  "commonConfirm": "Konfirmasi",
+  "commonLoading": "Memuat",
+  "commonError": "Terjadi kesalahan.",
+
+  "navHome": "Beranda",
+  "navDiscovery": "Jelajah",
+  "navOrders": "Pesanan",
+  "navAccount": "Akun",
+  "navActive": "Aktif",
+  "navHistory": "Riwayat",
+  "navProfile": "Profil",
+  "navOffers": "Tawaran",
+  "navDashboard": "Dasbor",
+  "navServices": "Layanan",
+
+  "languageEnglish": "Inggris",
+  "languageIndonesian": "Indonesia",
+  "changeLanguageTitle": "Bahasa",
+  "changeLanguageSaved": "Bahasa diperbarui.",
+
+  "orderStatusPendingAcceptance": "Menunggu mitra",
+  "orderStatusAccepted": "Diterima",
+  "orderStatusDriverAssigned": "Driver ditugaskan",
+  "orderStatusPickedUp": "Diambil dari Anda",
+  "orderStatusAtLaundromat": "Di laundry",
+  "orderStatusWeighedAwaitingConfirm": "Menunggu konfirmasi Anda",
+  "orderStatusAwaitingPayment": "Menunggu pembayaran",
+  "orderStatusWashing": "Dicuci",
+  "orderStatusReadyForDelivery": "Siap diantar",
+  "orderStatusOutForDelivery": "Dalam pengantaran",
+  "orderStatusCompleted": "Selesai",
+  "orderStatusCancelled": "Dibatalkan",
+  "orderStatusUnknown": "Tidak diketahui",
+
+  "timelinePlaced": "Dibuat",
+  "timelineAccepted": "Diterima",
+  "timelinePickup": "Penjemputan",
+  "timelineWashing": "Dicuci",
+  "timelineOnTheWay": "Dalam perjalanan",
+  "timelineCompleted": "Selesai",
+  "timelineOrderCancelled": "Pesanan dibatalkan",
+
+  "commonEmailLabel": "Email",
+  "commonPasswordLabel": "Kata sandi",
+  "commonPhoneLabel": "Nomor telepon",
+  "commonFullNameLabel": "Nama lengkap",
+  "commonConfirmPasswordLabel": "Konfirmasi kata sandi",
+  "commonCreateAccount": "Buat akun",
+  "commonEmailRequired": "Email wajib diisi",
+  "commonEmailInvalid": "Masukkan email yang valid",
+  "commonPasswordRequired": "Kata sandi wajib diisi",
+  "commonPasswordTooShort": "Minimal 6 karakter",
+  "commonConfirmPasswordRequired": "Harap konfirmasi kata sandi Anda",
+  "commonPasswordsDoNotMatch": "Kata sandi tidak cocok",
+  "commonFieldRequired": "{label} wajib diisi",
+  "@commonFieldRequired": {
+    "placeholders": {
+      "label": { "type": "String" }
+    }
+  },
+  "commonShowPassword": "Tampilkan kata sandi",
+  "commonHidePassword": "Sembunyikan kata sandi",
+
+  "loginTitle": "Selamat datang kembali",
+  "loginSubtitle": "Masuk untuk melanjutkan.",
+  "loginSubmit": "Masuk",
+  "loginNoAccountQuestion": "Belum punya akun?",
+  "loginRegisterAction": "Daftar",
+
+  "roleSelectTitle": "Selamat datang di Washly",
+  "roleSelectSubtitle": "Pilih cara Anda bergabung.",
+  "roleSelectCustomerTitle": "Pelanggan",
+  "roleSelectCustomerSubtitle": "Pesan antar-jemput cucian",
+  "roleSelectPartnerTitle": "Mitra Laundry",
+  "roleSelectPartnerSubtitle": "Kelola toko dan pesanan Anda",
+  "roleSelectDriverTitle": "Driver",
+  "roleSelectDriverSubtitle": "Ambil dan antar pesanan",
+  "roleSelectHaveAccountQuestion": "Sudah punya akun?",
+  "roleSelectLoginAction": "Masuk",
+
+  "registerCustomerTitle": "Daftar pelanggan",
+
+  "registerDriverTitle": "Daftar driver",
+  "registerDriverVehicleTypeLabel": "Jenis kendaraan (mis. motor)",
+  "registerDriverPlateNumberLabel": "Nomor pelat",
+
+  "registerPartnerTitle": "Daftar mitra",
+  "registerPartnerSelectSpecialty": "Pilih setidaknya satu spesialisasi.",
+  "registerPartnerSectionAccount": "Akun",
+  "registerPartnerSectionBusiness": "Bisnis",
+  "registerPartnerSectionSpecialties": "Spesialisasi",
+  "registerPartnerOwnerNameLabel": "Nama pemilik",
+  "registerPartnerBusinessNameLabel": "Nama bisnis",
+  "registerPartnerBusinessAddressLabel": "Alamat bisnis",
+  "registerPartnerLatitudeLabel": "Lintang",
+  "registerPartnerLongitudeLabel": "Bujur",
+  "registerPartnerCoordinateInvalid": "Masukkan angka yang valid",
+  "registerPartnerPricingModelLabel": "Model harga",
+  "registerPartnerPricingPerKg": "Per kilogram",
+  "registerPartnerPricingPerItem": "Per item",
+  "registerPartnerSpecialtyShoes": "sepatu",
+  "registerPartnerSpecialtyBags": "tas",
+  "registerPartnerSpecialtyDolls": "boneka",
+  "registerPartnerSpecialtyCostumes": "kostum",
+  "registerPartnerSpecialtyExpress": "ekspres",
+  "registerPartnerSpecialtyIroning": "setrika",
+  "registerPartnerSpecialtyKiloan": "kiloan",
+  "registerPartnerSpecialtyDryClean": "cuci kering",
+
+  "accountSettingsTitle": "Pengaturan akun",
+  "accountLogoutTitle": "Keluar",
+  "accountLogoutConfirm": "Apakah Anda yakin ingin keluar?",
+  "accountShopProfile": "Profil toko",
+  "accountEditProfile": "Edit Profil",
+  "accountChangePassword": "Ubah Kata Sandi",
+  "accountChangeLanguage": "Ubah Bahasa",
+
+  "editProfileTitle": "Edit Profil",
+  "editProfileChangePhoto": "Ubah foto",
+  "editProfilePhotoUpdated": "Foto diperbarui.",
+  "editProfilePickerError": "Tidak dapat membuka pemilih: {error}",
+  "@editProfilePickerError": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "editProfileUpdated": "Profil diperbarui.",
+  "editProfileNameLabel": "Nama",
+  "editProfileNameRequired": "Nama wajib diisi",
+  "editProfilePhoneRequired": "Nomor telepon wajib diisi",
+  "editProfileSave": "Simpan profil",
+
+  "navVouchers": "Voucher",
+
+  "commonSeeAll": "Lihat semua",
+  "commonRedeem": "Tukar",
+  "commonSubmit": "Kirim",
+  "commonPost": "Kirim",
+  "commonNotNow": "Nanti saja",
+  "orderN": "Pesanan #{id}",
+  "@orderN": {
+    "placeholders": {
+      "id": { "type": "int" }
+    }
+  },
+  "orderNumber": "#{id}",
+  "@orderNumber": {
+    "placeholders": {
+      "id": { "type": "int" }
+    }
+  },
+  "moneyRp": "Rp {amount}",
+  "@moneyRp": {
+    "placeholders": {
+      "amount": { "type": "String" }
+    }
+  },
+  "moneyRpOff": "Potongan Rp {amount}",
+  "@moneyRpOff": {
+    "placeholders": {
+      "amount": { "type": "String" }
+    }
+  },
+  "moneyRpNegative": "- Rp {amount}",
+  "@moneyRpNegative": {
+    "placeholders": {
+      "amount": { "type": "String" }
+    }
+  },
+
+  "serviceTagShoes": "Sepatu",
+  "serviceTagBags": "Tas",
+  "serviceTagDolls": "Boneka",
+  "serviceTagCostumes": "Kostum",
+  "serviceTagExpress": "Ekspres",
+  "serviceTagIroning": "Setrika",
+  "serviceTagKiloan": "Kiloan",
+  "serviceTagDryClean": "Cuci Kering",
+
+  "sortTopRated": "Rating Teratas",
+  "sortNearest": "Terdekat",
+  "filterServices": "Filter Layanan",
+  "filterServicesCount": "Layanan ({count})",
+  "@filterServicesCount": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "filterReset": "Atur ulang",
+  "filterApplyCount": "Terapkan Filter ({count})",
+  "@filterApplyCount": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+
+  "homeSpecialties": "Spesialisasi",
+  "homeSearchHint": "Cari laundry",
+  "homeWelcomeBack": "Selamat datang kembali!",
+  "homeGreetingFallback": "di sana",
+  "homeLoyaltyWallet": "Dompet loyalitas",
+  "homePoints": "{count} poin",
+  "@homePoints": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "homeRedeemPrompt": "Tukarkan poin Anda dengan voucher.",
+  "homeVouchersReady": "{count, plural, one{{count} voucher siap dipakai saat checkout.} other{{count} voucher siap dipakai saat checkout.}}",
+  "@homeVouchersReady": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "homeActiveOrders": "Pesanan Aktif",
+  "homeNoActiveOrders": "Belum ada pesanan aktif saat ini.",
+  "homeYourOrder": "Pesanan Anda",
+  "homeTapToTrack": "Pesanan #{id} · ketuk untuk melacak",
+  "@homeTapToTrack": {
+    "placeholders": {
+      "id": { "type": "int" }
+    }
+  },
+  "homeActionConfirmWeighedPrice": "Perlu tindakan: konfirmasi harga timbangan Anda",
+  "homeNearbyLaundromats": "Laundry Terdekat",
+  "homeNoLaundromatsYet": "Belum ada laundry yang tersedia.",
+
+  "ordersTitle": "Pesanan Saya",
+  "ordersEmptyActive": "Belum ada pesanan aktif. Buat satu dari Jelajah.",
+  "ordersEmptyHistory": "Belum ada pesanan sebelumnya.",
+  "ordersLaundromatFallback": "Laundry",
+  "ordersItemCount": "{count, plural, one{{count} item} other{{count} item}}",
+  "@ordersItemCount": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "ordersPerKgSuffix": "per kg",
+  "ordersActionConfirmPrice": "Perlu tindakan: konfirmasi harga",
+  "ordersWeighedAtPickup": "Ditimbang saat penjemputan",
+
+  "vouchersTitle": "Voucher",
+  "vouchersRedeemedToast": "Berhasil menukar voucher Rp {amount}!",
+  "@vouchersRedeemedToast": {
+    "placeholders": {
+      "amount": { "type": "String" }
+    }
+  },
+  "vouchersRedeemPoints": "Tukar Poin",
+  "vouchersRedeemSubtitle": "Pilih hadiah untuk ditukar dengan poin Anda.",
+  "vouchersNoRewards": "Belum ada hadiah yang tersedia saat ini.",
+  "vouchersYourVouchers": "Voucher Anda",
+  "vouchersEmpty": "Belum ada voucher. Tukarkan poin untuk mendapatkannya.",
+  "vouchersEarnRate": "Dapatkan 5 poin per Rp 10.000 yang dibelanjakan.",
+  "vouchersTierPoints": "{count} poin",
+  "@vouchersTierPoints": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "vouchersNeedMorePoints": "Butuh {count} poin lagi",
+  "@vouchersNeedMorePoints": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "vouchersUsed": "Terpakai",
+  "vouchersAvailableAtCheckout": "Tersedia saat checkout",
+
+  "voucherSelectTitle": "Terapkan voucher",
+  "voucherSelectCountAvailable": "{count, plural, one{{count} voucher tersedia} other{{count} voucher tersedia}}",
+  "@voucherSelectCountAvailable": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "voucherSelectRemoveApplied": "Hapus voucher yang diterapkan",
+  "voucherSelectDiscountVoucher": "Voucher diskon",
+  "voucherSelectEmptyTitle": "Tidak ada voucher",
+  "voucherSelectEmptyBody": "Tukarkan poin loyalitas Anda dengan voucher, lalu terapkan di sini.",
+
+  "searchHint": "Cari nama, layanan, atau area",
+  "searchPrompt": "Ketik nama, layanan, atau area, lalu tekan cari.",
+  "searchNoMatches": "Tidak ada laundry yang cocok dengan pencarian Anda.",
+
+  "discoveryError": "Kesalahan: {error}",
+  "@discoveryError": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "discoveryNoLaundromats": "Tidak ada laundry ditemukan.",
+  "discoveryReviewCount": "({count})",
+  "@discoveryReviewCount": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "discoveryDistanceKm": "{distance} km",
+  "@discoveryDistanceKm": {
+    "placeholders": {
+      "distance": { "type": "String" }
+    }
+  },
+  "discoveryAreaHidden": "Area ditampilkan setelah pemesanan",
+
+  "detailReviewsCount": "Ulasan ({count})",
+  "@detailReviewsCount": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "detailReviewCountSuffix": " ({count} ulasan)",
+  "@detailReviewCountSuffix": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "detailAreaHidden": "Area disembunyikan hingga penjemputan",
+  "detailServicesMenu": "Menu Layanan",
+  "detailNoServices": "Belum ada layanan yang terdaftar.",
+  "detailCustomerReviews": "{count} Ulasan Pelanggan",
+  "@detailCustomerReviews": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "detailAddReview": "Tambah Ulasan",
+  "detailNoReviews": "Belum ada ulasan. Jadilah yang pertama!",
+  "detailWriteReview": "Tulis Ulasan",
+  "detailYourReview": "Ulasan Anda",
+  "detailSignInToReview": "Silakan masuk untuk memberi ulasan.",
+  "detailReviewFailed": "Gagal: {error}",
+  "@detailReviewFailed": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "detailPricePerUnit": "Rp {price} / {unit}",
+  "@detailPricePerUnit": {
+    "placeholders": {
+      "price": { "type": "String" },
+      "unit": { "type": "String" }
+    }
+  },
+  "detailUnitKg": "kg",
+  "detailUnitItem": "item",
+  "detailQuantityOfItems": "Jumlah Item",
+  "detailPieces": "{count} pcs",
+  "@detailPieces": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "detailPerKgNote": "Dihargai per berat Rp {price}/kg. Laundry menimbang cucian Anda setelah penjemputan dan mengirim harganya — Anda menyetujuinya sebelum membayar.",
+  "@detailPerKgNote": {
+    "placeholders": {
+      "price": { "type": "String" }
+    }
+  },
+  "detailWashingInstructions": "Instruksi Pencucian (Opsional)",
+  "detailItemDetailsHint": "Detail Item (mis. 2 Nike Dunks, 1 tas Coach)",
+  "detailAddToBasket": "Tambah ke Keranjang",
+  "detailAddToBasketPrice": "Tambah ke Keranjang • Rp {price}",
+  "@detailAddToBasketPrice": {
+    "placeholders": {
+      "price": { "type": "String" }
+    }
+  },
+  "detailNewBasketTitle": "Mulai keranjang baru?",
+  "detailNewBasketBody": "Keranjang Anda berisi item dari {name}. Menambahkan ini akan mengosongkannya dan memulai keranjang baru di {store}.",
+  "@detailNewBasketBody": {
+    "placeholders": {
+      "name": { "type": "String" },
+      "store": { "type": "String" }
+    }
+  },
+  "detailAnotherLaundromat": "laundry lain",
+  "detailClearAndAdd": "Kosongkan & tambah",
+  "detailInBasket": "Di keranjang",
+  "detailItemsInBasket": "{count} item di keranjang",
+  "@detailItemsInBasket": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "detailWeighedAtPickupArrow": "Ditimbang saat penjemputan  ➔",
+  "detailBasketTotalArrow": "Rp {amount}  ➔",
+  "@detailBasketTotalArrow": {
+    "placeholders": {
+      "amount": { "type": "String" }
+    }
+  },
+
+  "orderDetailTitle": "Detail Pesanan",
+  "orderDetailPriceApprovedToast": "Harga disetujui. Lanjut ke pembayaran.",
+  "orderDetailPaymentReceived": "Pembayaran diterima.",
+  "orderDetailPaymentPending": "Pembayaran menunggu konfirmasi.",
+  "orderDetailPaymentFailed": "Pembayaran gagal. Anda dapat mencoba lagi.",
+  "orderDetailPaymentClosed": "Jendela pembayaran ditutup.",
+  "orderDetailPaymentLaunched": "Pembayaran dibuka. Pesanan ini diperbarui setelah dikonfirmasi.",
+  "orderDetailDriverPickingUp": "Driver menjemput cucian Anda",
+  "orderDetailDriverDelivering": "Driver mengantar cucian Anda",
+  "orderDetailLookingForPickup": "Mencari driver untuk menjemput cucian Anda",
+  "orderDetailLookingForDelivery": "Mencari driver untuk mengantar cucian Anda",
+  "orderDetailVehicleFallback": "Kendaraan",
+  "orderDetailLaundromatFallback": "Laundry",
+  "orderDetailConfirmWeighedPrice": "Konfirmasi harga timbangan Anda",
+  "orderDetailWeighedExplainer": "Laundry telah menimbang cucian Anda. Tinjau harga dan item Anda di bawah, lalu setujui untuk lanjut ke pembayaran.",
+  "orderDetailMeasuredWeight": "Berat terukur",
+  "orderDetailKg": "{value} kg",
+  "@orderDetailKg": {
+    "placeholders": {
+      "value": { "type": "String" }
+    }
+  },
+  "orderDetailWashSubtotal": "Subtotal cuci",
+  "orderDetailDeliveryFee": "Biaya pengantaran",
+  "orderDetailDeclaredProtection": "Perlindungan item dideklarasikan",
+  "orderDetailVoucher": "Voucher",
+  "orderDetailFinalPrice": "Harga akhir",
+  "orderDetailApproveContinue": "Setujui & lanjut ke pembayaran",
+  "orderDetailDeclaredReceived": "Item dideklarasikan  ({received}/{total} diterima)",
+  "@orderDetailDeclaredReceived": {
+    "placeholders": {
+      "received": { "type": "int" },
+      "total": { "type": "int" }
+    }
+  },
+  "orderDetailNotReceived": "Tidak diterima",
+  "orderDetailPaymentRequired": "Pembayaran diperlukan",
+  "orderDetailAmountDue": "Jumlah tagihan",
+  "orderDetailPayNow": "Bayar sekarang",
+  "orderDetailProgress": "Progres",
+  "orderDetailReceipt": "Struk",
+  "orderDetailSubtotal": "Subtotal",
+  "orderDetailWeighed": "Ditimbang",
+  "orderDetailGrandTotal": "Total keseluruhan",
+  "orderDetailAfterWeighing": "Setelah ditimbang",
+  "orderDetailPayment": "Pembayaran",
+  "orderDetailPaymentNotStarted": "Belum dimulai",
+  "orderDetailUnitKg": "kg",
+  "orderDetailUnitPcs": "pcs",
+  "orderDetailDeclaredItems": "Item dideklarasikan",
+  "orderDetailReceived": "Diterima",
+  "orderDetailAwaitingIntake": "Menunggu penerimaan",
+  "orderDetailHowDidItGo": "Bagaimana hasilnya?",
+  "orderDetailRateLaundromat": "Beri rating laundry",
+  "orderDetailWarranty": "Garansi",
+  "orderDetailWarrantyOnlyDeclared": "Garansi hanya tersedia untuk item dideklarasikan yang dikonfirmasi laundry saat penerimaan.",
+  "orderDetailWarrantyClaims": "Klaim garansi",
+  "orderDetailNoClaims": "Belum ada klaim diajukan. Ketuk \"Garansi\" di atas jika ada masalah dengan item dideklarasikan.",
+  "orderDetailRateThisLaundromat": "Beri rating laundry ini",
+  "orderDetailAddCommentOptional": "Tambahkan komentar (opsional)",
+  "orderDetailSignInToRate": "Silakan masuk untuk memberi rating.",
+  "orderDetailRatingThanks": "Terima kasih atas rating Anda!",
+  "orderDetailUseWarrantyTitle": "Gunakan garansi Anda?",
+  "orderDetailWarrantyExplainer": "Item yang Anda deklarasikan dilindungi garansi Washly. Jika salah satu hilang atau rusak, Anda dapat mengajukan klaim dengan foto dan laundry akan meninjaunya.",
+  "orderDetailCoveredItems": "Item yang dilindungi",
+  "orderDetailFileClaim": "Ajukan klaim",
+  "orderDetailItemFallback": "Item #{id}",
+  "@orderDetailItemFallback": {
+    "placeholders": {
+      "id": { "type": "int" }
+    }
+  },
+  "orderDetailResolution": "Penyelesaian: {note}",
+  "@orderDetailResolution": {
+    "placeholders": {
+      "note": { "type": "String" }
+    }
+  },
+  "orderDetailPayout": "Pembayaran: Rp {amount} (Washly)",
+  "@orderDetailPayout": {
+    "placeholders": {
+      "amount": { "type": "String" }
+    }
+  },
+  "orderDetailFileClaimTitle": "Ajukan klaim garansi",
+  "orderDetailItem": "Item",
+  "orderDetailWhatWentWrong": "Apa yang terjadi?",
+  "orderDetailPickItemDescribe": "Pilih item dan jelaskan masalahnya.",
+  "orderDetailAddPhoto": "Tambah foto",
+  "orderDetailPhotosAttached": "{count} terlampir",
+  "@orderDetailPhotosAttached": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "orderDetailSubmitClaim": "Kirim klaim",
+  "orderDetailClaimSubmitted": "Klaim terkirim.",
+
+  "checkoutTitle": "Checkout Pesanan",
+  "checkoutPickerError": "Tidak dapat membuka pemilih: {error}",
+  "@checkoutPickerError": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "checkoutLabelItemTitle": "Beri label item ini",
+  "checkoutLabelItemHint": "mis. Nike Air Force 1 Putih",
+  "checkoutEnterPickupAddress": "Silakan masukkan alamat penjemputan Anda.",
+  "checkoutSignInToOrder": "Silakan masuk lagi untuk membuat pesanan.",
+  "checkoutPaymentReceivedTitle": "Pembayaran diterima",
+  "checkoutPaymentReceivedBody": "Terima kasih! Pembayaran Anda telah dikonfirmasi. Lacak pesanan ini di tab Pesanan.",
+  "checkoutPaymentPendingTitle": "Pembayaran menunggu",
+  "checkoutPaymentPendingBody": "Pembayaran Anda sedang diproses. Pesanan ini diperbarui otomatis setelah dikonfirmasi.",
+  "checkoutPaymentNotCompletedTitle": "Pembayaran belum selesai",
+  "checkoutPaymentNotCompletedBody": "Anda menutup jendela pembayaran. Pesanan Anda tersimpan — Anda dapat membayar dari tab Pesanan kapan saja.",
+  "checkoutPaymentFailedTitle": "Pembayaran gagal",
+  "checkoutPaymentFailedBody": "Pembayaran tidak berhasil. Pesanan Anda tersimpan — coba lagi dari tab Pesanan.",
+  "checkoutCompletePaymentTitle": "Selesaikan pembayaran Anda",
+  "checkoutCompletePaymentBody": "Kami membuka halaman pembayaran. Pesanan ini diperbarui otomatis setelah pembayaran dikonfirmasi.",
+  "checkoutOrderPlacedTitle": "Pesanan dibuat",
+  "checkoutOrderPlacedPaymentError": "Pesanan Anda dibuat, tetapi kami tidak dapat membuka pembayaran: {error}. Anda dapat membayar dari tab Pesanan.",
+  "@checkoutOrderPlacedPaymentError": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "checkoutPerKgPlacedTitle": "Pesanan Dibuat",
+  "checkoutPerKgPlacedBody": "Pesanan Anda menunggu laundry untuk menerimanya. Harga akhir ditetapkan setelah cucian Anda ditimbang — Anda membayar kemudian.",
+  "checkoutDeliveryPickupDetails": "Detail Pengantaran & Penjemputan",
+  "checkoutPickupAddressLabel": "Alamat Penjemputan & Pengembalian",
+  "checkoutNotesLabel": "Catatan untuk driver / laundry (opsional)",
+  "checkoutNotesHint": "mis. Titipkan ke satpam, rumah berpagar hitam",
+  "checkoutOrderSummary": "Ringkasan Pesanan",
+  "checkoutDeclaredItemsOptional": "Item dideklarasikan (opsional)",
+  "checkoutDeclaredExplainer": "Item dideklarasikan adalah barang berharga yang Anda foto sebelum penjemputan — seperti jaket, sepatu bermerek, atau seprai.",
+  "checkoutDeclaredBenefit": "Foto tersebut adalah bukti kondisi saat penyerahan, sehingga Anda dapat mengajukan klaim garansi jika suatu item hilang atau rusak.",
+  "checkoutDeclaredFeeNote": "Menambahkan item dideklarasikan menerapkan biaya perlindungan satu kali Rp {fee} pada pesanan ini.",
+  "@checkoutDeclaredFeeNote": {
+    "placeholders": {
+      "fee": { "type": "String" }
+    }
+  },
+  "checkoutVoucherApplied": "Voucher diterapkan",
+  "checkoutApplyVoucher": "Terapkan voucher",
+  "checkoutPlaceOrder": "Buat Pesanan",
+  "checkoutPricePerKg": "Rp {price}/kg",
+  "@checkoutPricePerKg": {
+    "placeholders": {
+      "price": { "type": "String" }
+    }
+  },
+  "checkoutPiecesPrefix": "{count}pcs x ",
+  "@checkoutPiecesPrefix": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "checkoutEstimatedWashPerKg": "Estimasi cuci (per kg)",
+  "checkoutWashSubtotal": "Subtotal Cuci",
+  "checkoutWeighedAtPickup": "Ditimbang saat penjemputan",
+  "checkoutDeclaredProtection": "Perlindungan item dideklarasikan",
+  "checkoutVoucher": "Voucher",
+  "checkoutPickupDeliveryFee": "Biaya Penjemputan & Pengantaran",
+  "checkoutCalculatedAtPickup": "Dihitung saat penjemputan",
+  "checkoutFinalPrice": "Harga akhir",
+  "checkoutTotalBeforeFee": "Total (sebelum biaya)",
+  "checkoutAfterWeighing": "Setelah ditimbang",
+  "checkoutPerKgFooter": "Cucian Anda dihargai per berat. Anda menyetujui harga akhir setelah ditimbang, lalu membayar.",
+  "checkoutPerItemFooter": "Biaya pengantaran dihitung dari jarak penjemputan saat Anda membuat pesanan.",
+
+  "partnerDashboardTitle": "Dasbor",
+  "partnerDashboardReport": "Laporan",
+  "partnerDashboardReportSaved": "Laporan disimpan ke {where}.",
+  "@partnerDashboardReportSaved": {
+    "placeholders": {
+      "where": { "type": "String" }
+    }
+  },
+  "partnerDashboardRangeDay": "Hari ini",
+  "partnerDashboardRangeMonth": "Bulan ini",
+  "partnerDashboardRangeYear": "Tahun ini",
+  "partnerDashboardRevenue": "Pendapatan (pesanan dibayar)",
+  "partnerDashboardInProcess": "Diproses",
+  "partnerDashboardCompleted": "Selesai",
+  "partnerDashboardTotalOrders": "Total pesanan",
+  "partnerDashboardAvgReview": "Rata-rata ulasan · {count}",
+  "@partnerDashboardAvgReview": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "partnerDashboardNoReviewsYet": "Belum ada ulasan",
+  "partnerDashboardSalesByProduct": "Penjualan per produk",
+  "partnerDashboardNoSales": "Belum ada penjualan pada periode ini.",
+  "partnerDashboardRevenueAxis": "Pendapatan",
+
+  "partnerOrdersTitle": "Pesanan",
+  "partnerOrdersActiveTab": "Aktif ({count})",
+  "@partnerOrdersActiveTab": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "partnerOrdersDoneTab": "Selesai ({count})",
+  "@partnerOrdersDoneTab": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "partnerOrdersEmptyActive": "Belum ada pesanan aktif.",
+  "partnerOrdersEmptyDone": "Belum ada pesanan selesai atau dibatalkan.",
+  "partnerOrdersOpenForOrders": "Menerima pesanan",
+  "partnerOrdersClosed": "Tutup",
+  "partnerOrdersOpenHint": "Pelanggan dapat membuat pesanan di toko Anda.",
+  "partnerOrdersClosedHint": "Toko Anda disembunyikan dari pesanan baru.",
+  "partnerOrdersPerKg": "Per kg",
+  "partnerOrdersPerItem": "Per item",
+  "partnerOrdersItemCount": "{count, plural, one{{count} item} other{{count} item}}",
+  "@partnerOrdersItemCount": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "partnerOrdersNeedsWarranty": "Perlu persetujuan garansi",
+  "partnerOrdersWeighedAtPickup": "Ditimbang saat penjemputan",
+
+  "partnerOrderDetailNotFound": "Pesanan tidak ditemukan.",
+  "partnerOrderDetailPerKgOrder": "Pesanan per kg",
+  "partnerOrderDetailPerItemOrder": "Pesanan per item",
+  "partnerOrderDetailItems": "Item",
+  "partnerOrderDetailDeclaredItems": "Item dideklarasikan",
+  "partnerOrderDetailProgress": "Progres",
+  "partnerOrderDetailWarrantyClaims": "Klaim garansi",
+  "partnerOrderDetailNeedsWarranty": "Perlu persetujuan garansi",
+  "partnerOrderDetailReceived": "Diterima",
+  "partnerOrderDetailAwaitingAcceptance": "Menunggu penerimaan",
+  "partnerOrderDetailNotReceived": "Tidak diterima",
+  "partnerOrderDetailVehicleFallback": "Kendaraan",
+  "partnerOrderDetailClaimPhoto": "Foto klaim",
+  "partnerOrderDetailWaitWashAfterPayment": "Menunggu pencucian dimulai setelah pembayaran.",
+  "partnerOrderDetailWaitCustomerApprove": "Menunggu pelanggan menyetujui harga timbangan.",
+  "partnerOrderDetailWaitCustomerPay": "Menunggu pelanggan membayar.",
+  "partnerOrderDetailWaitDriverPickup": "Menunggu driver menjemput.",
+  "partnerOrderDetailOutForDelivery": "Dalam pengantaran.",
+  "partnerOrderDetailDriverBringingIn": "Driver membawa cucian masuk",
+  "partnerOrderDetailDriverTakingOut": "Driver membawa cucian keluar untuk diantar",
+  "partnerOrderDetailLookingForDriver": "Mencari driver untuk mengantar cucian",
+  "partnerOrderDetailReject": "Tolak",
+  "partnerOrderDetailAccept": "Terima",
+  "partnerOrderDetailOrderRejected": "Pesanan ditolak.",
+  "partnerOrderDetailOrderAccepted": "Pesanan diterima.",
+  "partnerOrderDetailReceiveAndWeigh": "Terima & timbang",
+  "partnerOrderDetailConfirmReceived": "Konfirmasi diterima",
+  "partnerOrderDetailMarkReady": "Tandai siap diantar",
+  "partnerOrderDetailMarkedReady": "Ditandai siap diantar.",
+  "partnerOrderDetailConfirmArrived": "Konfirmasi cucian telah tiba untuk melanjutkan.",
+  "partnerOrderDetailConfirmEachItem": "Konfirmasi setiap item dideklarasikan yang Anda terima. Hilangkan centang untuk menandai ketidaksesuaian.",
+  "partnerOrderDetailDiscrepancyHint": "Apa yang salah? (opsional)",
+  "partnerOrderDetailMeasuredWeight": "Berat terukur",
+  "partnerOrderDetailWeightLabel": "Berat (kg)",
+  "partnerOrderDetailEnterValidWeight": "Masukkan berat yang valid.",
+  "partnerOrderDetailSubmitWeight": "Kirim berat & kirim harga",
+  "partnerOrderDetailConfirmStartWashing": "Konfirmasi & mulai mencuci",
+  "partnerOrderDetailWeightRecorded": "Berat tercatat. Harga dikirim ke pelanggan.",
+  "partnerOrderDetailOrderReceived": "Pesanan diterima.",
+  "partnerOrderDetailResolutionNote": "Penyelesaian: {note}",
+  "@partnerOrderDetailResolutionNote": {
+    "placeholders": {
+      "note": { "type": "String" }
+    }
+  },
+  "partnerOrderDetailResolveTitle": "Klaim {status}",
+  "@partnerOrderDetailResolveTitle": {
+    "placeholders": {
+      "status": { "type": "String" }
+    }
+  },
+  "partnerOrderDetailResolutionNoteLabel": "Catatan penyelesaian",
+  "partnerOrderDetailPayoutLabel": "Jumlah pembayaran (opsional)",
+  "partnerOrderDetailApprove": "Setujui",
+  "partnerOrderDetailClaimApproved": "Klaim disetujui.",
+  "partnerOrderDetailClaimRejected": "Klaim ditolak.",
+  "partnerOrderDetailDeliveredCompleted": "Diantar & selesai",
+
+  "partnerServicesTitle": "Layanan",
+  "partnerServicesAdd": "Tambah layanan",
+  "partnerServicesEdit": "Edit layanan",
+  "partnerServicesEmpty": "Belum ada layanan. Tambahkan yang pertama.",
+  "partnerServicesDeleteTitle": "Hapus layanan?",
+  "partnerServicesDeleteBody": "Hapus \"{name}\"? Tindakan ini tidak dapat dibatalkan.",
+  "@partnerServicesDeleteBody": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "partnerServicesDeleted": "Layanan dihapus.",
+  "partnerServicesEditTooltip": "Edit",
+  "partnerServicesDeleteTooltip": "Hapus",
+  "partnerServicesPricePerUnit": "Rp {price} / {unit}",
+  "@partnerServicesPricePerUnit": {
+    "placeholders": {
+      "price": { "type": "String" },
+      "unit": { "type": "String" }
+    }
+  },
+  "partnerServicesUnitKg": "kg",
+  "partnerServicesUnitItem": "item",
+  "partnerServicesNameLabel": "Nama layanan",
+  "partnerServicesDescriptionLabel": "Deskripsi (opsional)",
+  "partnerServicesPriceLabel": "Harga",
+  "partnerServicesPerItem": "Per item",
+  "partnerServicesPerKg": "Per kg",
+  "partnerServicesEnterNameAndPrice": "Masukkan nama dan harga yang valid.",
+  "partnerServicesAddPhoto": "Tambah foto",
+  "partnerServicesProductImage": "Gambar produk",
+  "partnerServicesProductImageHint": "Ini foto yang dilihat pelanggan untuk layanan ini.",
+  "partnerServicesChange": "Ubah",
+  "partnerServicesUpload": "Unggah",
+
+  "partnerReviewsTitle": "Ulasan Pelanggan",
+  "partnerReviewsEmpty": "Belum ada ulasan.",
+  "partnerReviewsCount": "  ·  {count, plural, one{{count} ulasan} other{{count} ulasan}}",
+  "@partnerReviewsCount": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "partnerReviewsNoComment": "Tidak ada komentar tertulis.",
+
+  "partnerShopEditTitle": "Profil Toko",
+  "partnerShopEditUpdated": "Profil toko diperbarui.",
+  "partnerShopEditNameLabel": "Nama toko",
+  "partnerShopEditDescriptionLabel": "Deskripsi",
+  "partnerShopEditAreaLabel": "Label area (ditampilkan ke pelanggan)",
+  "partnerShopEditAreaHint": "mis. Kemang, Jakarta Selatan",
+  "partnerShopEditAddressLabel": "Alamat lengkap (pribadi, tidak ditampilkan ke pelanggan)",
+  "partnerShopEditSpecialtiesLabel": "Spesialisasi (dipisahkan koma)",
+  "partnerShopEditSpecialtiesHint": "sepatu, tas, ekspres",
+  "partnerShopEditSave": "Simpan profil toko",
+
+  "driverStatusBarAccepted": "Diterima",
+  "driverStatusBarPickedUp": "Dijemput",
+  "driverStatusBarOnTheWay": "Dalam perjalanan",
+  "driverStatusBarDelivered": "Diantar",
+
+  "driverNavHome": "Beranda",
+  "driverNavActive": "Aktif",
+  "driverNavHistory": "Riwayat",
+  "driverNavProfile": "Profil",
+
+  "driverHomeErrorTitle": "Terjadi kesalahan",
+  "driverHomeErrorOk": "OK",
+  "driverHomeDeliveryOffers": "Tawaran pengantaran",
+  "driverHomeNoOffers": "Belum ada tawaran saat ini.",
+  "driverHomeTurnOnActive": "Aktifkan status Aktif untuk menerima tawaran.",
+  "driverHomeStatusOnDelivery": "Sedang mengantar",
+  "driverHomeStatusActive": "Aktif",
+  "driverHomeStatusNotActive": "Tidak Aktif",
+  "driverHomeVehicleLine": "{vehicleType} · {plateNumber}",
+  "@driverHomeVehicleLine": {
+    "placeholders": {
+      "vehicleType": { "type": "String" },
+      "plateNumber": { "type": "String" }
+    }
+  },
+  "driverHomeTagPickup": "JEMPUT",
+  "driverHomeTagDelivery": "ANTAR",
+  "driverHomeOrderNumber": "Pesanan #{id}",
+  "@driverHomeOrderNumber": {
+    "placeholders": {
+      "id": { "type": "int" }
+    }
+  },
+  "driverHomeLaundromatFallback": "Laundry",
+  "driverHomeDeliverTo": "Antar ke: {address}",
+  "@driverHomeDeliverTo": {
+    "placeholders": {
+      "address": { "type": "String" }
+    }
+  },
+  "driverHomeReject": "Tolak",
+  "driverHomeAccept": "Terima",
+
+  "driverActiveErrorTitle": "Tidak dapat memperbarui pesanan",
+  "driverActiveErrorOk": "OK",
+  "driverActiveTitle": "Pengantaran Aktif",
+  "driverActiveNoActiveDelivery": "Tidak ada pengantaran aktif.",
+  "driverActiveCurrentDelivery": "Pengantaran saat ini · #{id}",
+  "@driverActiveCurrentDelivery": {
+    "placeholders": {
+      "id": { "type": "int" }
+    }
+  },
+  "driverActiveLaundromatFallback": "Laundry",
+  "driverActiveCollectFrom": "Ambil dari: {address}",
+  "@driverActiveCollectFrom": {
+    "placeholders": {
+      "address": { "type": "String" }
+    }
+  },
+  "driverActiveDropAt": "Antar ke: {name}",
+  "@driverActiveDropAt": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "driverActiveDeliverTo": "Antar ke: {address}",
+  "@driverActiveDeliverTo": {
+    "placeholders": {
+      "address": { "type": "String" }
+    }
+  },
+  "driverActiveMarkPickedUp": "Tandai sudah dijemput dari pelanggan",
+  "driverActivePickedUpSuccess": "Sudah dijemput dari pelanggan.",
+  "driverActiveMarkArrived": "Tandai tiba di laundry",
+  "driverActiveArrivedSuccess": "Sudah diantar ke laundry.",
+  "driverActiveMarkDelivered": "Tandai sudah diantar",
+  "driverActiveDeliveredSuccess": "Pengantaran selesai!",
+  "driverActiveWaitingOn": "Menunggu laundry / pelanggan: {status}.",
+  "@driverActiveWaitingOn": {
+    "placeholders": {
+      "status": { "type": "String" }
+    }
+  },
+
+  "driverHistoryTitle": "Riwayat Pengantaran",
+  "driverHistoryEmpty": "Belum ada pengantaran selesai.",
+  "driverHistoryCount": "{count, plural, one{{count} pengantaran selesai} other{{count} pengantaran selesai}}",
+  "@driverHistoryCount": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "driverHistoryLaundromatFallback": "Laundry",
+  "driverHistoryOrderCompleted": "Pesanan #{id} · Selesai",
+  "@driverHistoryOrderCompleted": {
+    "placeholders": {
+      "id": { "type": "int" }
+    }
+  },
+  "driverHistoryOrderTotal": "Total pesanan",
+  "driverHistoryMoneyRp": "Rp {amount}",
+  "@driverHistoryMoneyRp": {
+    "placeholders": {
+      "amount": { "type": "String" }
+    }
+  }
+}

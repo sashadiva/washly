@@ -4,12 +4,15 @@ import 'package:image_picker/image_picker.dart';
 import '../core/auth_store.dart';
 import 'package:provider/provider.dart';
 import '../core/cart_store.dart';
+import '../l10n/app_localizations.dart';
 import '../core/payment_launcher.dart';
 import '../models/cart_item.dart';
 import '../models/laundromat_detail.dart';
 import '../models/order.dart';
+import '../models/wallet.dart';
 import '../services/order_service.dart';
 import '../theme/app_theme.dart';
+import 'customer/voucher_select_screen.dart';
 
 class CheckoutScreen extends StatefulWidget {
   final LaundromatDetail store;
@@ -36,22 +39,52 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       TextEditingController(text: 'Jl. Rawa Belong No. 15, Palmerah');
   final _notesCtrl = TextEditingController();
   final List<_DeclaredDraft> _declared = [];
+  Voucher? _voucher; // applied voucher, if any
   bool _isSubmitting = false;
+
+  // Flat protection fee charged once when the order carries declared items.
+  static const double _declaredItemsFee = 2000;
+
+  double get _voucherDiscount => _voucher?.amountOff ?? 0;
+
+  // Per-item total shown before the delivery fee (which is computed at pickup):
+  // wash subtotal + declared-items fee - voucher, floored at 0. Mirrors the
+  // backend's finalTotal formula (minus the delivery fee component).
+  double _perItemTotalBeforeDeliveryFee() {
+    final gross =
+        subtotal + (_hasDeclaredItems ? _declaredItemsFee : 0) - _voucherDiscount;
+    return gross < 0 ? 0 : gross;
+  }
 
   // Per-kg orders have no known total up front; the price is finalized after
   // the partner weighs the laundry.
   bool get _isPerKg => widget.cart.any((i) => i.isKilo);
 
+  bool get _hasDeclaredItems => _declared.isNotEmpty;
+
   double get subtotal =>
       widget.cart.fold(0.0, (sum, item) => sum + item.totalPrice);
 
   Future<void> _addDeclaredItem() async {
-    final XFile? file = await _picker.pickImage(
-      source: ImageSource.gallery,
-      maxWidth: 1200,
-      imageQuality: 70,
-    );
-    if (file == null) return;
+    final l10n = AppLocalizations.of(context);
+    final XFile? file;
+    try {
+      file = await _picker.pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 1200,
+        imageQuality: 70,
+      );
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(
+              l10n.checkoutPickerError('$e'.replaceFirst('Exception: ', ''))),
+          backgroundColor: AppColors.error,
+        ));
+      }
+      return;
+    }
+    if (file == null) return; // user cancelled
 
     final bytes = await file.readAsBytes();
     final dataUri = 'data:image/jpeg;base64,${base64Encode(bytes)}';
@@ -62,22 +95,22 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: AppColors.surface,
-        title: const Text('Label this item', style: AppTypography.heading2),
+        title: Text(l10n.checkoutLabelItemTitle, style: AppTypography.heading2),
         content: TextField(
           controller: labelCtrl,
           autofocus: true,
-          decoration: const InputDecoration(
-            labelText: 'e.g. White Nike Air Force 1',
+          decoration: InputDecoration(
+            labelText: l10n.checkoutLabelItemHint,
           ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel'),
+            child: Text(l10n.commonCancel),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(ctx, labelCtrl.text.trim()),
-            child: const Text('Add'),
+            child: Text(l10n.commonAdd),
           ),
         ],
       ),
@@ -90,9 +123,10 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   }
 
   Future<void> _placeOrder() async {
+    final l10n = AppLocalizations.of(context);
     if (_addressCtrl.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter your pickup address.')),
+        SnackBar(content: Text(l10n.checkoutEnterPickupAddress)),
       );
       return;
     }
@@ -100,7 +134,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     final auth = context.read<AuthStore>();
     if (auth.currentUser == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please sign in again to place an order.')),
+        SnackBar(content: Text(l10n.checkoutSignInToOrder)),
       );
       return;
     }
@@ -117,6 +151,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             .map((d) =>
                 DeclaredItemInput(label: d.label, photoUrl: d.photoDataUri))
             .toList(),
+        voucherId: _voucher?.id,
       );
 
       if (!mounted) return;
@@ -147,69 +182,57 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
 
   /// Per-item: open the Snap popup (web) and reflect the reported outcome.
   Future<void> _payPerItem(Order order) async {
+    final l10n = AppLocalizations.of(context);
     try {
       final result = await _paymentLauncher.launch(order.id);
       if (!mounted) return;
       switch (result) {
         case PaymentResult.success:
           _showResultDialog(
-            title: 'Payment received',
-            message:
-                'Thanks! Your payment is confirmed. Track this order in the '
-                'Orders tab.',
+            title: l10n.checkoutPaymentReceivedTitle,
+            message: l10n.checkoutPaymentReceivedBody,
           );
           break;
         case PaymentResult.pending:
           _showResultDialog(
-            title: 'Payment pending',
-            message:
-                'Your payment is being processed. This order updates '
-                'automatically once it is confirmed.',
+            title: l10n.checkoutPaymentPendingTitle,
+            message: l10n.checkoutPaymentPendingBody,
           );
           break;
         case PaymentResult.closed:
           _showResultDialog(
-            title: 'Payment not completed',
-            message:
-                'You closed the payment window. Your order is saved — you can '
-                'pay from the Orders tab anytime.',
+            title: l10n.checkoutPaymentNotCompletedTitle,
+            message: l10n.checkoutPaymentNotCompletedBody,
           );
           break;
         case PaymentResult.error:
           _showResultDialog(
-            title: 'Payment failed',
-            message:
-                'The payment did not go through. Your order is saved — try '
-                'again from the Orders tab.',
+            title: l10n.checkoutPaymentFailedTitle,
+            message: l10n.checkoutPaymentFailedBody,
           );
           break;
         case PaymentResult.launched:
           _showResultDialog(
-            title: 'Complete your payment',
-            message:
-                'We opened the payment page. This order updates automatically '
-                'once payment is confirmed.',
+            title: l10n.checkoutCompletePaymentTitle,
+            message: l10n.checkoutCompletePaymentBody,
           );
           break;
       }
     } catch (e) {
       if (!mounted) return;
       _showResultDialog(
-        title: 'Order placed',
-        message:
-            'Your order was created, but we could not open payment: '
-            '${'$e'.replaceFirst('Exception: ', '')}. '
-            'You can pay from the Orders tab.',
+        title: l10n.checkoutOrderPlacedTitle,
+        message: l10n.checkoutOrderPlacedPaymentError(
+            '$e'.replaceFirst('Exception: ', '')),
       );
     }
   }
 
   void _showPerKgPlaced(Order order) {
+    final l10n = AppLocalizations.of(context);
     _showResultDialog(
-      title: 'Order Placed',
-      message:
-          'Your order is waiting for the laundromat to accept it. The final '
-          'price is set after your laundry is weighed — you will pay then.',
+      title: l10n.checkoutPerKgPlacedTitle,
+      message: l10n.checkoutPerKgPlacedBody,
     );
   }
 
@@ -228,7 +251,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               Navigator.pop(context); // leave checkout
               Navigator.pop(context); // leave detail -> back to discovery
             },
-            child: const Text('Done'),
+            child: Text(AppLocalizations.of(ctx).commonDone),
           ),
         ],
       ),
@@ -247,8 +270,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
-      appBar: AppBar(title: const Text('Checkout Order')),
+      appBar: AppBar(title: Text(l10n.checkoutTitle)),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(AppSpacing.lg),
         child: Column(
@@ -265,38 +289,40 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             ),
             const Divider(height: AppSpacing.xxl, color: AppColors.border),
 
-            Text('Delivery & Pickup Details', style: AppTypography.subheading),
+            Text(l10n.checkoutDeliveryPickupDetails,
+                style: AppTypography.subheading),
             const SizedBox(height: AppSpacing.md),
             TextField(
               controller: _addressCtrl,
-              decoration: const InputDecoration(
-                labelText: 'Pickup & Return Address',
-                prefixIcon: Icon(Icons.location_on, color: AppColors.error),
+              decoration: InputDecoration(
+                labelText: l10n.checkoutPickupAddressLabel,
+                prefixIcon: const Icon(Icons.location_on, color: AppColors.error),
               ),
             ),
             const SizedBox(height: AppSpacing.md),
             TextField(
               controller: _notesCtrl,
-              decoration: const InputDecoration(
-                labelText: 'Notes for driver / laundromat (optional)',
-                hintText: 'e.g. Leave with security, house with black gate',
-                prefixIcon: Icon(Icons.notes, color: AppColors.textSecondary),
+              decoration: InputDecoration(
+                labelText: l10n.checkoutNotesLabel,
+                hintText: l10n.checkoutNotesHint,
+                prefixIcon:
+                    const Icon(Icons.notes, color: AppColors.textSecondary),
               ),
             ),
 
             const SizedBox(height: AppSpacing.xxl),
-            Text('Order Summary', style: AppTypography.subheading),
+            Text(l10n.checkoutOrderSummary, style: AppTypography.subheading),
             const SizedBox(height: AppSpacing.md),
-            _orderSummaryCard(),
+            _orderSummaryCard(l10n),
 
             const SizedBox(height: AppSpacing.lg),
-            _declaredItemsCard(),
+            _declaredItemsCard(l10n),
 
             const SizedBox(height: AppSpacing.lg),
-            _voucherPlaceholderCard(),
+            _voucherCard(l10n),
 
             const SizedBox(height: AppSpacing.lg),
-            _priceCard(),
+            _priceCard(l10n),
           ],
         ),
       ),
@@ -321,9 +347,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                   child: CircularProgressIndicator(
                       color: Colors.white, strokeWidth: 2),
                 )
-              : const Text(
-                  'Place Order',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+              : Text(
+                  l10n.checkoutPlaceOrder,
+                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                 ),
         ),
       ),
@@ -340,18 +366,20 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         child: Padding(padding: const EdgeInsets.all(AppSpacing.md), child: child),
       );
 
-  Widget _orderSummaryCard() {
+  Widget _orderSummaryCard(AppLocalizations l10n) {
     return _card(
       child: Column(
         children: widget.cart.map((item) {
-          final unit = item.isKilo ? 'kg' : 'pcs';
+          // Per-kg has no customer-set quantity (weighed at the laundromat), so
+          // show a scale marker instead of a piece count.
+          final qtyLabel =
+              item.isKilo ? '⚖  ' : l10n.checkoutPiecesPrefix(item.quantity);
           return Padding(
             padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('${item.quantity}$unit x ',
-                    style: AppTypography.subheading),
+                Text(qtyLabel, style: AppTypography.subheading),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -364,8 +392,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 ),
                 Text(
                   item.isKilo
-                      ? 'Rp ${item.unitPrice.toStringAsFixed(0)}/kg'
-                      : 'Rp ${item.totalPrice.toStringAsFixed(0)}',
+                      ? l10n.checkoutPricePerKg(item.unitPrice.toStringAsFixed(0))
+                      : l10n.moneyRp(item.totalPrice.toStringAsFixed(0)),
                   style: AppTypography.body,
                 ),
               ],
@@ -376,7 +404,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     );
   }
 
-  Widget _declaredItemsCard() {
+  Widget _declaredItemsCard(AppLocalizations l10n) {
     return _card(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -384,20 +412,55 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Expanded(
-                child: Text('Declared items (optional)',
+              Expanded(
+                child: Text(l10n.checkoutDeclaredItemsOptional,
                     style: AppTypography.subheading),
               ),
               TextButton.icon(
                 onPressed: _isSubmitting ? null : _addDeclaredItem,
                 icon: const Icon(Icons.add_a_photo_outlined, size: 18),
-                label: const Text('Add'),
+                label: Text(l10n.commonAdd),
               ),
             ],
           ),
+          const SizedBox(height: AppSpacing.xs),
           Text(
-            'Photograph valuable items now to enable a warranty claim later.',
+            l10n.checkoutDeclaredExplainer,
             style: AppTypography.caption,
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          // Benefit explanation.
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Icon(Icons.verified_user_outlined,
+                  size: 16, color: AppColors.success),
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: Text(
+                  l10n.checkoutDeclaredBenefit,
+                  style: AppTypography.caption,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          // Fee note.
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Icon(Icons.info_outline,
+                  size: 16, color: AppColors.primary),
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: Text(
+                  l10n.checkoutDeclaredFeeNote(
+                      _declaredItemsFee.toStringAsFixed(0)),
+                  style: AppTypography.caption
+                      .copyWith(color: AppColors.textSecondary),
+                ),
+              ),
+            ],
           ),
           if (_declared.isNotEmpty) const SizedBox(height: AppSpacing.sm),
           ..._declared.asMap().entries.map((entry) {
@@ -427,59 +490,111 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     );
   }
 
-  Widget _voucherPlaceholderCard() {
-    return _card(
-      child: Row(
-        children: [
-          const Icon(Icons.confirmation_number_outlined,
-              color: AppColors.textMuted),
-          const SizedBox(width: AppSpacing.sm),
-          const Expanded(
-            child: Text('Apply a voucher', style: AppTypography.subheading),
-          ),
-          Text('Coming soon', style: AppTypography.caption),
-        ],
+  Widget _voucherCard(AppLocalizations l10n) {
+    final applied = _voucher != null;
+    return InkWell(
+      onTap: _isSubmitting ? null : _openVoucherSelect,
+      borderRadius: BorderRadius.circular(AppRadius.md),
+      child: _card(
+        child: Row(
+          children: [
+            Icon(Icons.confirmation_number_outlined,
+                color: applied ? AppColors.primary : AppColors.textMuted),
+            const SizedBox(width: AppSpacing.sm),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(applied ? l10n.checkoutVoucherApplied : l10n.checkoutApplyVoucher,
+                      style: AppTypography.subheading),
+                  if (applied)
+                    Text(l10n.moneyRpOff(_voucher!.amountOff.toStringAsFixed(0)),
+                        style: AppTypography.caption
+                            .copyWith(color: AppColors.success)),
+                ],
+              ),
+            ),
+            if (applied)
+              TextButton(
+                onPressed:
+                    _isSubmitting ? null : () => setState(() => _voucher = null),
+                child: Text(l10n.commonRemove),
+              )
+            else
+              const Icon(Icons.chevron_right, color: AppColors.textMuted),
+          ],
+        ),
       ),
     );
   }
 
-  Widget _priceCard() {
+  Future<void> _openVoucherSelect() async {
+    final result = await Navigator.push<Object?>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => VoucherSelectScreen(selectedVoucherId: _voucher?.id),
+      ),
+    );
+    if (!mounted || result == null) return;
+    setState(() {
+      if (result == 'none') {
+        _voucher = null;
+      } else if (result is Voucher) {
+        _voucher = result;
+      }
+    });
+  }
+
+  Widget _priceCard(AppLocalizations l10n) {
     return _card(
       child: Column(
         children: [
           _summaryRow(
-            _isPerKg ? 'Estimated wash (per kg)' : 'Wash Subtotal',
+            _isPerKg ? l10n.checkoutEstimatedWashPerKg : l10n.checkoutWashSubtotal,
             _isPerKg
-                ? 'Weighed at pickup'
-                : 'Rp ${subtotal.toStringAsFixed(0)}',
+                ? l10n.checkoutWeighedAtPickup
+                : l10n.moneyRp(subtotal.toStringAsFixed(0)),
           ),
+          if (_hasDeclaredItems) ...[
+            const SizedBox(height: AppSpacing.sm),
+            _summaryRow(
+              l10n.checkoutDeclaredProtection,
+              l10n.moneyRp(_declaredItemsFee.toStringAsFixed(0)),
+            ),
+          ],
+          if (_voucher != null) ...[
+            const SizedBox(height: AppSpacing.sm),
+            _summaryRow(
+              l10n.checkoutVoucher,
+              l10n.moneyRpNegative(_voucherDiscount.toStringAsFixed(0)),
+            ),
+          ],
           const SizedBox(height: AppSpacing.sm),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text('Pickup & Delivery Fee', style: AppTypography.body),
-              Text('Calculated at pickup', style: AppTypography.caption),
+              Text(l10n.checkoutPickupDeliveryFee, style: AppTypography.body),
+              Text(l10n.checkoutCalculatedAtPickup, style: AppTypography.caption),
             ],
           ),
           const Divider(height: AppSpacing.xl, color: AppColors.border),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(_isPerKg ? 'Final price' : 'Total (before fee)',
+              Text(_isPerKg ? l10n.checkoutFinalPrice : l10n.checkoutTotalBeforeFee,
                   style: AppTypography.heading2),
               Text(
                 _isPerKg
-                    ? 'After weighing'
-                    : 'Rp ${subtotal.toStringAsFixed(0)}',
+                    ? l10n.checkoutAfterWeighing
+                    : l10n.moneyRp(
+                        _perItemTotalBeforeDeliveryFee().toStringAsFixed(0)),
                 style: AppTypography.heading2.copyWith(color: AppColors.primary),
               ),
             ],
           ),
           const SizedBox(height: AppSpacing.xs),
           Text(
-            _isPerKg
-                ? 'Your laundry is priced by weight. You approve the final price after it is weighed, then pay.'
-                : 'The delivery fee is calculated from the pickup distance when you place the order.',
+            _isPerKg ? l10n.checkoutPerKgFooter : l10n.checkoutPerItemFooter,
             style: AppTypography.caption,
           ),
         ],

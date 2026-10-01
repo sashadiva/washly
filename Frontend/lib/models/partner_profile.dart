@@ -86,12 +86,16 @@ class PartnerDashboard {
   final int paidOrderCount;
   final int totalOrderCount;
   final int completedOrderCount;
+  final int inProcessOrderCount;
+  final int cancelledOrderCount;
 
   PartnerDashboard({
     required this.revenue,
     required this.paidOrderCount,
     required this.totalOrderCount,
     required this.completedOrderCount,
+    required this.inProcessOrderCount,
+    required this.cancelledOrderCount,
   });
 
   factory PartnerDashboard.fromJson(Map<String, dynamic> json) {
@@ -100,6 +104,134 @@ class PartnerDashboard {
       paidOrderCount: json['paidOrderCount'] as int? ?? 0,
       totalOrderCount: json['totalOrderCount'] as int? ?? 0,
       completedOrderCount: json['completedOrderCount'] as int? ?? 0,
+      inProcessOrderCount: json['inProcessOrderCount'] as int? ?? 0,
+      cancelledOrderCount: json['cancelledOrderCount'] as int? ?? 0,
+    );
+  }
+}
+
+/// A single customer review for the partner's shop (GET /api/partner/reviews).
+class PartnerReview {
+  final int id;
+  final int rating;
+  final String? comment;
+  final String userName;
+  final DateTime createdAt;
+
+  PartnerReview({
+    required this.id,
+    required this.rating,
+    this.comment,
+    required this.userName,
+    required this.createdAt,
+  });
+
+  factory PartnerReview.fromJson(Map<String, dynamic> json) {
+    return PartnerReview(
+      id: json['id'] as int,
+      rating: json['rating'] as int? ?? 0,
+      comment: json['comment'] as String?,
+      userName: json['userName'] as String? ?? 'Customer',
+      createdAt: DateTime.parse(json['createdAt'] as String),
+    );
+  }
+}
+
+/// A per-service revenue row in the sales report.
+class ReportServiceRow {
+  final String serviceName;
+  final String unit;
+  final int orders;
+  final double quantity;
+  final double revenue;
+
+  ReportServiceRow({
+    required this.serviceName,
+    required this.unit,
+    required this.orders,
+    required this.quantity,
+    required this.revenue,
+  });
+
+  factory ReportServiceRow.fromJson(Map<String, dynamic> json) {
+    return ReportServiceRow(
+      serviceName: json['serviceName'] as String? ?? '',
+      unit: json['unit'] as String? ?? '',
+      orders: json['orders'] as int? ?? 0,
+      quantity: (json['quantity'] as num?)?.toDouble() ?? 0,
+      revenue: (json['revenue'] as num?)?.toDouble() ?? 0,
+    );
+  }
+}
+
+/// A single order row in the sales report.
+class ReportOrderRow {
+  final int id;
+  final DateTime date;
+  final String status;
+  final double total;
+
+  ReportOrderRow({
+    required this.id,
+    required this.date,
+    required this.status,
+    required this.total,
+  });
+
+  factory ReportOrderRow.fromJson(Map<String, dynamic> json) {
+    return ReportOrderRow(
+      id: json['id'] as int,
+      date: DateTime.parse(json['date'] as String),
+      status: json['status'] as String? ?? '',
+      total: (json['total'] as num?)?.toDouble() ?? 0,
+    );
+  }
+}
+
+/// The full sales report (GET /api/partner/report).
+class PartnerReport {
+  final String shopName;
+  final DateTime generatedAt;
+  final double revenue;
+  final int totalOrders;
+  final int paidOrders;
+  final int completedOrders;
+  final int cancelledOrders;
+  final double averageOrderValue;
+  final List<ReportServiceRow> perService;
+  final List<ReportOrderRow> orders;
+
+  PartnerReport({
+    required this.shopName,
+    required this.generatedAt,
+    required this.revenue,
+    required this.totalOrders,
+    required this.paidOrders,
+    required this.completedOrders,
+    required this.cancelledOrders,
+    required this.averageOrderValue,
+    required this.perService,
+    required this.orders,
+  });
+
+  factory PartnerReport.fromJson(Map<String, dynamic> json) {
+    final s = json['summary'] as Map<String, dynamic>? ?? {};
+    return PartnerReport(
+      shopName: json['shopName'] as String? ?? 'Shop',
+      generatedAt: DateTime.parse(
+          json['generatedAt'] as String? ?? DateTime.now().toIso8601String()),
+      revenue: (s['revenue'] as num?)?.toDouble() ?? 0,
+      totalOrders: s['totalOrders'] as int? ?? 0,
+      paidOrders: s['paidOrders'] as int? ?? 0,
+      completedOrders: s['completedOrders'] as int? ?? 0,
+      cancelledOrders: s['cancelledOrders'] as int? ?? 0,
+      averageOrderValue: (s['averageOrderValue'] as num?)?.toDouble() ?? 0,
+      perService: (json['perService'] as List? ?? [])
+          .map((e) => ReportServiceRow.fromJson(e as Map<String, dynamic>))
+          .toList(),
+      orders: (json['orders'] as List? ?? [])
+          .map((e) => ReportOrderRow.fromJson(e as Map<String, dynamic>))
+          .toList(),
     );
   }
 }

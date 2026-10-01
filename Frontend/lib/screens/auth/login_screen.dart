@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/auth_store.dart';
 import '../../core/session.dart';
+import '../../l10n/app_localizations.dart';
 import '../../services/auth_service.dart';
 import '../../theme/app_theme.dart';
 import 'role_select_screen.dart';
@@ -60,6 +61,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
       appBar: AppBar(
         automaticallyImplyLeading: false,
@@ -77,25 +79,26 @@ class _LoginScreenState extends State<LoginScreen> {
                 const Icon(Icons.local_laundry_service,
                     size: 64, color: AppColors.primary),
                 const SizedBox(height: AppSpacing.lg),
-                const Text('Welcome back',
+                Text(l10n.loginTitle,
                     textAlign: TextAlign.center, style: AppTypography.heading1),
                 const SizedBox(height: AppSpacing.xs),
-                const Text('Log in to continue.',
+                Text(l10n.loginSubtitle,
                     textAlign: TextAlign.center, style: AppTypography.body),
                 const SizedBox(height: AppSpacing.xxl),
                 TextFormField(
                   controller: _emailCtrl,
                   keyboardType: TextInputType.emailAddress,
-                  decoration: const InputDecoration(labelText: 'Email'),
-                  validator: (v) =>
-                      (v == null || v.trim().isEmpty) ? 'Email is required' : null,
+                  decoration: InputDecoration(labelText: l10n.commonEmailLabel),
+                  validator: (v) => (v == null || v.trim().isEmpty)
+                      ? l10n.commonEmailRequired
+                      : null,
                 ),
                 const SizedBox(height: AppSpacing.lg),
                 TextFormField(
                   controller: _passwordCtrl,
                   obscureText: _obscure,
                   decoration: InputDecoration(
-                    labelText: 'Password',
+                    labelText: l10n.commonPasswordLabel,
                     suffixIcon: IconButton(
                       icon: Icon(
                           _obscure ? Icons.visibility_off : Icons.visibility),
@@ -103,7 +106,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ),
                   validator: (v) => (v == null || v.isEmpty)
-                      ? 'Password is required'
+                      ? l10n.commonPasswordRequired
                       : null,
                 ),
                 const SizedBox(height: AppSpacing.xxl),
@@ -116,17 +119,17 @@ class _LoginScreenState extends State<LoginScreen> {
                           child: CircularProgressIndicator(
                               strokeWidth: 2, color: Colors.white),
                         )
-                      : const Text('Log in'),
+                      : Text(l10n.loginSubmit),
                 ),
                 const SizedBox(height: AppSpacing.lg),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Text("Don't have an account?",
+                    Text(l10n.loginNoAccountQuestion,
                         style: AppTypography.body),
                     TextButton(
                       onPressed: _submitting ? null : _goToRegister,
-                      child: Text('Register',
+                      child: Text(l10n.loginRegisterAction,
                           style: AppTypography.subheading
                               .copyWith(color: AppColors.primary)),
                     ),

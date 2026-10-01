@@ -8,12 +8,12 @@
  * simply waits — a later availability change can trigger re-offering.
  *
  * Two phases share one mechanism:
- *   PICKUP   — triggered when the partner accepts (order ACCEPTED)
- *   DELIVERY — triggered when the partner marks ready (READY_FOR_DELIVERY)
- *
- * The reference point for "nearest" is the laundromat location in both phases
- * (the driver goes to the shop to collect for pickup, and to collect the washed
- * laundry for delivery).
+ *   PICKUP   — triggered when the partner accepts (order ACCEPTED). The driver
+ *              drives to the CUSTOMER to collect the dirty laundry, then takes
+ *              it to the laundromat, so "nearest" is measured to the customer.
+ *   DELIVERY — triggered when the partner marks ready (READY_FOR_DELIVERY). The
+ *              driver collects the washed laundry at the laundromat, so
+ *              "nearest" is measured to the laundromat.
  */
 
 import { OfferStatus, DriverAvailability, Prisma } from '@prisma/client';
@@ -43,8 +43,13 @@ export async function offerToNearestDriver(
   });
   if (!order) return null;
 
-  const refLat = order.laundromat.latitude;
-  const refLng = order.laundromat.longitude;
+  // PICKUP: driver goes to the customer first, so rank by distance to the
+  // customer (falling back to the laundromat if the customer has no coords).
+  // DELIVERY: driver collects the washed laundry at the laundromat.
+  const useCustomer =
+    phase === 'PICKUP' && order.customerLat != null && order.customerLng != null;
+  const refLat = useCustomer ? order.customerLat! : order.laundromat.latitude;
+  const refLng = useCustomer ? order.customerLng! : order.laundromat.longitude;
 
   // Drivers who already have an offer for this order+phase that is OFFERED or
   // ACCEPTED must not be offered again. (REJECTED/EXPIRED can't re-receive

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../../l10n/app_localizations.dart';
+import '../../widgets/app_bottom_nav.dart';
 import 'partner_dashboard_screen.dart';
 import 'partner_orders_screen.dart';
 import 'partner_services_screen.dart';
@@ -17,6 +19,16 @@ class _PartnerHomeShellState extends State<PartnerHomeShell> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final items = [
+      AppNavItem(
+          Icons.dashboard_rounded, Icons.dashboard_outlined, l10n.navDashboard),
+      AppNavItem(
+          Icons.receipt_long_rounded, Icons.receipt_long_outlined, l10n.navOrders),
+      AppNavItem(Icons.cleaning_services_rounded,
+          Icons.cleaning_services_outlined, l10n.navServices),
+      AppNavItem(Icons.person_rounded, Icons.person_outline, l10n.navProfile),
+    ];
     final pages = const [
       PartnerDashboardScreen(),
       PartnerOrdersScreen(),
@@ -25,19 +37,20 @@ class _PartnerHomeShellState extends State<PartnerHomeShell> {
     ];
 
     return Scaffold(
-      body: pages[_index],
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: _index,
-        onDestinationSelected: (i) => setState(() => _index = i),
-        destinations: const [
-          NavigationDestination(
-              icon: Icon(Icons.dashboard_outlined), label: 'Dashboard'),
-          NavigationDestination(
-              icon: Icon(Icons.receipt_long_outlined), label: 'Orders'),
-          NavigationDestination(
-              icon: Icon(Icons.cleaning_services_outlined), label: 'Services'),
-          NavigationDestination(
-              icon: Icon(Icons.person_outline), label: 'Profile'),
+      // Overlay the floating nav on top of the body so there's no grey bar.
+      body: Stack(
+        children: [
+          Positioned.fill(child: pages[_index]),
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: AppBottomNav(
+              index: _index,
+              items: items,
+              onTap: (i) => setState(() => _index = i),
+            ),
+          ),
         ],
       ),
     );

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../l10n/app_localizations.dart';
 import '../../models/laundromat.dart';
 import '../../services/laundromat_service.dart';
 import '../../theme/app_theme.dart';
@@ -95,6 +96,7 @@ class _LaundromatSearchScreenState extends State<LaundromatSearchScreen> {
   }
 
   void _showFilterModal() {
+    final l10n = AppLocalizations.of(context);
     final temp = Set<String>.from(_selectedTags);
     showModalBottomSheet(
       context: context,
@@ -117,10 +119,10 @@ class _LaundromatSearchScreenState extends State<LaundromatSearchScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text('Filter Services', style: AppTypography.heading2),
+                  Text(l10n.filterServices, style: AppTypography.heading2),
                   TextButton(
                     onPressed: () => setSheet(() => temp.clear()),
-                    child: Text('Reset',
+                    child: Text(l10n.filterReset,
                         style: AppTypography.subheading
                             .copyWith(color: AppColors.primary)),
                   ),
@@ -134,7 +136,7 @@ class _LaundromatSearchScreenState extends State<LaundromatSearchScreen> {
                 children: _allTags.map((tag) {
                   final selected = temp.contains(tag);
                   return FilterChip(
-                    label: Text(tag),
+                    label: Text(serviceTagLabel(l10n, tag)),
                     selected: selected,
                     selectedColor: AppColors.primaryLight,
                     checkmarkColor: AppColors.primary,
@@ -158,7 +160,7 @@ class _LaundromatSearchScreenState extends State<LaundromatSearchScreen> {
                     });
                     Navigator.pop(ctx);
                   },
-                  child: Text('Apply Filters (${temp.length})'),
+                  child: Text(l10n.filterApplyCount(temp.length)),
                 ),
               ),
               const SizedBox(height: AppSpacing.md),
@@ -171,6 +173,7 @@ class _LaundromatSearchScreenState extends State<LaundromatSearchScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
       appBar: AppBar(
         titleSpacing: 0,
@@ -184,7 +187,7 @@ class _LaundromatSearchScreenState extends State<LaundromatSearchScreen> {
             // Rebuild for the clear button only; results wait for submit.
             onChanged: (_) => setState(() {}),
             decoration: InputDecoration(
-              hintText: 'Search name, service, or area',
+              hintText: l10n.searchHint,
               prefixIcon: const Icon(Icons.search),
               suffixIcon: _controller.text.isEmpty
                   ? null
@@ -226,17 +229,17 @@ class _LaundromatSearchScreenState extends State<LaundromatSearchScreen> {
 
           // Before submitting: prompt only, no filter/sort controls.
           if (!_hasSubmitted) {
-            return _hint('Type a name, service, or area, then hit search.');
+            return _hint(l10n.searchPrompt);
           }
 
           final results = _results();
           return Column(
             children: [
-              _filterSortBar(),
+              _filterSortBar(l10n),
               const Divider(height: 1, color: AppColors.border),
               Expanded(
                 child: results.isEmpty
-                    ? _hint('No laundromats match your search.')
+                    ? _hint(l10n.searchNoMatches)
                     : ListView.builder(
                         padding:
                             const EdgeInsets.symmetric(vertical: AppSpacing.sm),
@@ -253,7 +256,7 @@ class _LaundromatSearchScreenState extends State<LaundromatSearchScreen> {
   }
 
   // Filter + sort controls — only rendered after a search is submitted.
-  Widget _filterSortBar() {
+  Widget _filterSortBar(AppLocalizations l10n) {
     return Padding(
       padding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.lg,
@@ -267,8 +270,8 @@ class _LaundromatSearchScreenState extends State<LaundromatSearchScreen> {
               icon: const Icon(Icons.tune, size: 18),
               label: Text(
                 _selectedTags.isEmpty
-                    ? 'Filter Services'
-                    : 'Services (${_selectedTags.length})',
+                    ? l10n.filterServices
+                    : l10n.filterServicesCount(_selectedTags.length),
                 overflow: TextOverflow.ellipsis,
               ),
             ),
@@ -278,9 +281,11 @@ class _LaundromatSearchScreenState extends State<LaundromatSearchScreen> {
             child: DropdownButton<String>(
               value: _sort,
               style: AppTypography.subheading,
-              items: const [
-                DropdownMenuItem(value: 'rating', child: Text('Top Rated')),
-                DropdownMenuItem(value: 'distance', child: Text('Nearest')),
+              items: [
+                DropdownMenuItem(
+                    value: 'rating', child: Text(l10n.sortTopRated)),
+                DropdownMenuItem(
+                    value: 'distance', child: Text(l10n.sortNearest)),
               ],
               onChanged: (v) {
                 if (v == null) return;

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/auth_store.dart';
 import '../../core/session.dart';
+import '../../l10n/app_localizations.dart';
 import '../../services/auth_service.dart';
 import '../../theme/app_theme.dart';
 import 'register_customer_screen.dart' show AuthField, AuthValidators, AuthButtonSpinner;
@@ -59,7 +60,10 @@ class _RegisterPartnerScreenState extends State<RegisterPartnerScreen> {
     if (!_formKey.currentState!.validate()) return;
     if (_selectedSpecialties.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Select at least one specialty.')),
+        SnackBar(
+          content: Text(
+              AppLocalizations.of(context).registerPartnerSelectSpecialty),
+        ),
       );
       return;
     }
@@ -97,17 +101,45 @@ class _RegisterPartnerScreenState extends State<RegisterPartnerScreen> {
     }
   }
 
-  String? _coordinate(String? v, String label) {
-    if (v == null || v.trim().isEmpty) return '$label is required';
-    if (double.tryParse(v.trim()) == null) return 'Enter a valid number';
+  String? _coordinate(String? v, String label, AppLocalizations l10n) {
+    if (v == null || v.trim().isEmpty) return l10n.commonFieldRequired(label);
+    if (double.tryParse(v.trim()) == null) {
+      return l10n.registerPartnerCoordinateInvalid;
+    }
     return null;
+  }
+
+  /// Localized display label for a specialty tag. The tag value itself is kept
+  /// as-is (it is sent to the API).
+  String _specialtyLabel(String tag, AppLocalizations l10n) {
+    switch (tag) {
+      case 'shoes':
+        return l10n.registerPartnerSpecialtyShoes;
+      case 'bags':
+        return l10n.registerPartnerSpecialtyBags;
+      case 'dolls':
+        return l10n.registerPartnerSpecialtyDolls;
+      case 'costumes':
+        return l10n.registerPartnerSpecialtyCostumes;
+      case 'express':
+        return l10n.registerPartnerSpecialtyExpress;
+      case 'ironing':
+        return l10n.registerPartnerSpecialtyIroning;
+      case 'kiloan':
+        return l10n.registerPartnerSpecialtyKiloan;
+      case 'dry clean':
+        return l10n.registerPartnerSpecialtyDryClean;
+      default:
+        return tag;
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Partner sign up'),
+        title: Text(l10n.registerPartnerTitle),
         bottom: const PreferredSize(
           preferredSize: Size.fromHeight(1),
           child: Divider(height: 1, thickness: 1, color: AppColors.border),
@@ -122,42 +154,58 @@ class _RegisterPartnerScreenState extends State<RegisterPartnerScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const _SectionLabel('Account'),
-                AuthField(controller: _name, label: 'Owner name'),
+                _SectionLabel(l10n.registerPartnerSectionAccount),
+                AuthField(
+                  controller: _name,
+                  label: l10n.registerPartnerOwnerNameLabel,
+                  requiredMessage: l10n.commonFieldRequired(
+                      l10n.registerPartnerOwnerNameLabel),
+                ),
                 const SizedBox(height: AppSpacing.lg),
                 AuthField(
                   controller: _email,
-                  label: 'Email',
+                  label: l10n.commonEmailLabel,
                   keyboardType: TextInputType.emailAddress,
-                  validator: AuthValidators.email,
+                  validator: AuthValidators.email(l10n),
                 ),
                 const SizedBox(height: AppSpacing.lg),
                 AuthField(
                   controller: _phone,
-                  label: 'Phone',
+                  label: l10n.commonPhoneLabel,
                   keyboardType: TextInputType.phone,
+                  requiredMessage:
+                      l10n.commonFieldRequired(l10n.commonPhoneLabel),
                 ),
                 const SizedBox(height: AppSpacing.lg),
                 AuthField(
                   controller: _password,
-                  label: 'Password',
+                  label: l10n.commonPasswordLabel,
                   obscure: true,
-                  validator: AuthValidators.password,
+                  validator: AuthValidators.password(l10n),
                 ),
                 const SizedBox(height: AppSpacing.lg),
                 AuthField(
                   controller: _confirmPassword,
-                  label: 'Confirm password',
+                  label: l10n.commonConfirmPasswordLabel,
                   obscure: true,
-                  validator:
-                      AuthValidators.confirmPassword(() => _password.text),
+                  validator: AuthValidators.confirmPassword(
+                      l10n, () => _password.text),
                 ),
                 const SizedBox(height: AppSpacing.xl),
-                const _SectionLabel('Business'),
-                AuthField(controller: _businessName, label: 'Business name'),
+                _SectionLabel(l10n.registerPartnerSectionBusiness),
+                AuthField(
+                  controller: _businessName,
+                  label: l10n.registerPartnerBusinessNameLabel,
+                  requiredMessage: l10n.commonFieldRequired(
+                      l10n.registerPartnerBusinessNameLabel),
+                ),
                 const SizedBox(height: AppSpacing.lg),
                 AuthField(
-                    controller: _businessAddress, label: 'Business address'),
+                  controller: _businessAddress,
+                  label: l10n.registerPartnerBusinessAddressLabel,
+                  requiredMessage: l10n.commonFieldRequired(
+                      l10n.registerPartnerBusinessAddressLabel),
+                ),
                 const SizedBox(height: AppSpacing.lg),
                 Row(
                   children: [
@@ -166,9 +214,10 @@ class _RegisterPartnerScreenState extends State<RegisterPartnerScreen> {
                         controller: _latitude,
                         keyboardType: const TextInputType.numberWithOptions(
                             decimal: true, signed: true),
-                        decoration:
-                            const InputDecoration(labelText: 'Latitude'),
-                        validator: (v) => _coordinate(v, 'Latitude'),
+                        decoration: InputDecoration(
+                            labelText: l10n.registerPartnerLatitudeLabel),
+                        validator: (v) => _coordinate(
+                            v, l10n.registerPartnerLatitudeLabel, l10n),
                       ),
                     ),
                     const SizedBox(width: AppSpacing.lg),
@@ -177,9 +226,10 @@ class _RegisterPartnerScreenState extends State<RegisterPartnerScreen> {
                         controller: _longitude,
                         keyboardType: const TextInputType.numberWithOptions(
                             decimal: true, signed: true),
-                        decoration:
-                            const InputDecoration(labelText: 'Longitude'),
-                        validator: (v) => _coordinate(v, 'Longitude'),
+                        decoration: InputDecoration(
+                            labelText: l10n.registerPartnerLongitudeLabel),
+                        validator: (v) => _coordinate(
+                            v, l10n.registerPartnerLongitudeLabel, l10n),
                       ),
                     ),
                   ],
@@ -187,26 +237,28 @@ class _RegisterPartnerScreenState extends State<RegisterPartnerScreen> {
                 const SizedBox(height: AppSpacing.lg),
                 DropdownButtonFormField<String>(
                   initialValue: _pricingModel,
-                  decoration:
-                      const InputDecoration(labelText: 'Pricing model'),
-                  items: const [
+                  decoration: InputDecoration(
+                      labelText: l10n.registerPartnerPricingModelLabel),
+                  items: [
                     DropdownMenuItem(
-                        value: 'PER_KG', child: Text('Per kilogram')),
+                        value: 'PER_KG',
+                        child: Text(l10n.registerPartnerPricingPerKg)),
                     DropdownMenuItem(
-                        value: 'PER_ITEM', child: Text('Per item')),
+                        value: 'PER_ITEM',
+                        child: Text(l10n.registerPartnerPricingPerItem)),
                   ],
                   onChanged: (v) =>
                       setState(() => _pricingModel = v ?? 'PER_KG'),
                 ),
                 const SizedBox(height: AppSpacing.xl),
-                const _SectionLabel('Specialties'),
+                _SectionLabel(l10n.registerPartnerSectionSpecialties),
                 Wrap(
                   spacing: AppSpacing.sm,
                   runSpacing: AppSpacing.sm,
                   children: _specialtyOptions.map((tag) {
                     final selected = _selectedSpecialties.contains(tag);
                     return FilterChip(
-                      label: Text(tag),
+                      label: Text(_specialtyLabel(tag, l10n)),
                       selected: selected,
                       selectedColor: AppColors.primaryLight,
                       checkmarkColor: AppColors.primary,
@@ -223,7 +275,7 @@ class _RegisterPartnerScreenState extends State<RegisterPartnerScreen> {
                   onPressed: _submitting ? null : _submit,
                   child: _submitting
                       ? const AuthButtonSpinner()
-                      : const Text('Create account'),
+                      : Text(l10n.commonCreateAccount),
                 ),
               ],
             ),

@@ -3,9 +3,11 @@ import 'package:provider/provider.dart';
 import '../../core/auth_store.dart';
 import '../../core/locale_store.dart';
 import '../../core/profile_photo_store.dart';
+import '../../l10n/app_localizations.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/profile_avatar.dart';
 import '../auth/role_select_screen.dart';
+import '../partner/partner_shop_edit_screen.dart';
 import 'change_language_screen.dart';
 import 'change_password_screen.dart';
 import 'edit_profile_screen.dart';
@@ -13,8 +15,12 @@ import 'edit_profile_screen.dart';
 /// Shared account settings used under every role's Profile tab. Shows a profile
 /// header (avatar + name + email) and a menu that navigates to dedicated pages
 /// for editing profile, changing password, and language, plus logout.
+///
+/// [showShopProfile] adds a partner-only "Shop profile" tile that opens the
+/// shop editor.
 class AccountSettingsScreen extends StatefulWidget {
-  const AccountSettingsScreen({super.key});
+  final bool showShopProfile;
+  const AccountSettingsScreen({super.key, this.showShopProfile = false});
 
   @override
   State<AccountSettingsScreen> createState() => _AccountSettingsScreenState();
@@ -32,20 +38,21 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
   }
 
   Future<void> _confirmLogout() async {
+    final l10n = AppLocalizations.of(context);
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Log out'),
-        content: const Text('Are you sure you want to log out?'),
+        title: Text(l10n.accountLogoutTitle),
+        content: Text(l10n.accountLogoutConfirm),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Cancel'),
+            child: Text(l10n.commonCancel),
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Log out',
-                style: TextStyle(color: AppColors.error)),
+            child: Text(l10n.accountLogoutTitle,
+                style: const TextStyle(color: AppColors.error)),
           ),
         ],
       ),
@@ -71,34 +78,46 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
     final user = context.watch<AuthStore>().currentUser;
     final photo = context.watch<ProfilePhotoStore>().dataUri;
     final localeCode = context.watch<LocaleStore>().locale.languageCode;
-    final languageLabel = localeCode == 'id' ? 'Indonesian' : 'English';
+    final l10n = AppLocalizations.of(context);
+    final languageLabel =
+        localeCode == 'id' ? l10n.languageIndonesian : l10n.languageEnglish;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Account settings')),
+      appBar: AppBar(title: Text(l10n.accountSettingsTitle)),
       body: SafeArea(
         child: ListView(
-          padding: const EdgeInsets.all(AppSpacing.xl),
+          padding: const EdgeInsets.fromLTRB(
+              AppSpacing.xl, AppSpacing.xl, AppSpacing.xl, 100),
           children: [
             _profileHeader(user?.name ?? '-', user?.email ?? '-', photo),
             const SizedBox(height: AppSpacing.xl),
 
+            if (widget.showShopProfile) ...[
+              _MenuTile(
+                icon: Icons.storefront_outlined,
+                title: l10n.accountShopProfile,
+                onTap: () => _open(const PartnerShopEditScreen()),
+              ),
+              const SizedBox(height: AppSpacing.md),
+            ],
+
             _MenuTile(
               icon: Icons.person_outline,
-              title: 'Edit Profile',
+              title: l10n.accountEditProfile,
               onTap: () => _open(const EditProfileScreen()),
             ),
             const SizedBox(height: AppSpacing.md),
 
             _MenuTile(
               icon: Icons.lock_outline,
-              title: 'Change Password',
+              title: l10n.accountChangePassword,
               onTap: () => _open(const ChangePasswordScreen()),
             ),
             const SizedBox(height: AppSpacing.md),
 
             _MenuTile(
               icon: Icons.language_outlined,
-              title: 'Change Language',
+              title: l10n.accountChangeLanguage,
               trailingText: languageLabel,
               onTap: () => _open(const ChangeLanguageScreen()),
             ),
@@ -106,7 +125,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
 
             _MenuTile(
               icon: Icons.logout,
-              title: 'Log out',
+              title: l10n.accountLogoutTitle,
               danger: true,
               onTap: _confirmLogout,
             ),

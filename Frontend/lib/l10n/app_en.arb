@@ -1,0 +1,856 @@
+{
+  "@@locale": "en",
+
+  "appTitle": "Washly",
+
+  "commonCancel": "Cancel",
+  "commonSave": "Save",
+  "commonDone": "Done",
+  "commonAdd": "Add",
+  "commonRemove": "Remove",
+  "commonDelete": "Delete",
+  "commonRetry": "Retry",
+  "commonClose": "Close",
+  "commonApply": "Apply",
+  "commonConfirm": "Confirm",
+  "commonLoading": "Loading",
+  "commonError": "Something went wrong.",
+
+  "navHome": "Home",
+  "navDiscovery": "Discovery",
+  "navOrders": "Orders",
+  "navAccount": "Account",
+  "navActive": "Active",
+  "navHistory": "History",
+  "navProfile": "Profile",
+  "navOffers": "Offers",
+  "navDashboard": "Dashboard",
+  "navServices": "Services",
+
+  "languageEnglish": "English",
+  "languageIndonesian": "Indonesian",
+  "changeLanguageTitle": "Language",
+  "changeLanguageSaved": "Language updated.",
+
+  "orderStatusPendingAcceptance": "Waiting for partner",
+  "orderStatusAccepted": "Accepted",
+  "orderStatusDriverAssigned": "Driver assigned",
+  "orderStatusPickedUp": "Picked up from you",
+  "orderStatusAtLaundromat": "At the laundromat",
+  "orderStatusWeighedAwaitingConfirm": "Awaiting your confirmation",
+  "orderStatusAwaitingPayment": "Awaiting payment",
+  "orderStatusWashing": "Washing",
+  "orderStatusReadyForDelivery": "Ready for delivery",
+  "orderStatusOutForDelivery": "Out for delivery",
+  "orderStatusCompleted": "Completed",
+  "orderStatusCancelled": "Cancelled",
+  "orderStatusUnknown": "Unknown",
+
+  "timelinePlaced": "Placed",
+  "timelineAccepted": "Accepted",
+  "timelinePickup": "Pickup",
+  "timelineWashing": "Washing",
+  "timelineOnTheWay": "On the way",
+  "timelineCompleted": "Completed",
+  "timelineOrderCancelled": "Order cancelled",
+
+  "commonEmailLabel": "Email",
+  "commonPasswordLabel": "Password",
+  "commonPhoneLabel": "Phone",
+  "commonFullNameLabel": "Full name",
+  "commonConfirmPasswordLabel": "Confirm password",
+  "commonCreateAccount": "Create account",
+  "commonEmailRequired": "Email is required",
+  "commonEmailInvalid": "Enter a valid email",
+  "commonPasswordRequired": "Password is required",
+  "commonPasswordTooShort": "At least 6 characters",
+  "commonConfirmPasswordRequired": "Please confirm your password",
+  "commonPasswordsDoNotMatch": "Passwords do not match",
+  "commonFieldRequired": "{label} is required",
+  "@commonFieldRequired": {
+    "placeholders": {
+      "label": { "type": "String" }
+    }
+  },
+  "commonShowPassword": "Show password",
+  "commonHidePassword": "Hide password",
+
+  "loginTitle": "Welcome back",
+  "loginSubtitle": "Log in to continue.",
+  "loginSubmit": "Log in",
+  "loginNoAccountQuestion": "Don't have an account?",
+  "loginRegisterAction": "Register",
+
+  "roleSelectTitle": "Welcome to Washly",
+  "roleSelectSubtitle": "Choose how you want to join.",
+  "roleSelectCustomerTitle": "Customer",
+  "roleSelectCustomerSubtitle": "Order laundry pickup & delivery",
+  "roleSelectPartnerTitle": "Laundromat Partner",
+  "roleSelectPartnerSubtitle": "Manage your shop and orders",
+  "roleSelectDriverTitle": "Driver",
+  "roleSelectDriverSubtitle": "Pick up and deliver orders",
+  "roleSelectHaveAccountQuestion": "Already have an account?",
+  "roleSelectLoginAction": "Log in",
+
+  "registerCustomerTitle": "Customer sign up",
+
+  "registerDriverTitle": "Driver sign up",
+  "registerDriverVehicleTypeLabel": "Vehicle type (e.g. motorcycle)",
+  "registerDriverPlateNumberLabel": "Plate number",
+
+  "registerPartnerTitle": "Partner sign up",
+  "registerPartnerSelectSpecialty": "Select at least one specialty.",
+  "registerPartnerSectionAccount": "Account",
+  "registerPartnerSectionBusiness": "Business",
+  "registerPartnerSectionSpecialties": "Specialties",
+  "registerPartnerOwnerNameLabel": "Owner name",
+  "registerPartnerBusinessNameLabel": "Business name",
+  "registerPartnerBusinessAddressLabel": "Business address",
+  "registerPartnerLatitudeLabel": "Latitude",
+  "registerPartnerLongitudeLabel": "Longitude",
+  "registerPartnerCoordinateInvalid": "Enter a valid number",
+  "registerPartnerPricingModelLabel": "Pricing model",
+  "registerPartnerPricingPerKg": "Per kilogram",
+  "registerPartnerPricingPerItem": "Per item",
+  "registerPartnerSpecialtyShoes": "shoes",
+  "registerPartnerSpecialtyBags": "bags",
+  "registerPartnerSpecialtyDolls": "dolls",
+  "registerPartnerSpecialtyCostumes": "costumes",
+  "registerPartnerSpecialtyExpress": "express",
+  "registerPartnerSpecialtyIroning": "ironing",
+  "registerPartnerSpecialtyKiloan": "kiloan",
+  "registerPartnerSpecialtyDryClean": "dry clean",
+
+  "accountSettingsTitle": "Account settings",
+  "accountLogoutTitle": "Log out",
+  "accountLogoutConfirm": "Are you sure you want to log out?",
+  "accountShopProfile": "Shop profile",
+  "accountEditProfile": "Edit Profile",
+  "accountChangePassword": "Change Password",
+  "accountChangeLanguage": "Change Language",
+
+  "editProfileTitle": "Edit Profile",
+  "editProfileChangePhoto": "Change photo",
+  "editProfilePhotoUpdated": "Photo updated.",
+  "editProfilePickerError": "Could not open the picker: {error}",
+  "@editProfilePickerError": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "editProfileUpdated": "Profile updated.",
+  "editProfileNameLabel": "Name",
+  "editProfileNameRequired": "Name is required",
+  "editProfilePhoneRequired": "Phone is required",
+  "editProfileSave": "Save profile",
+
+  "navVouchers": "Vouchers",
+
+  "commonSeeAll": "See all",
+  "commonRedeem": "Redeem",
+  "commonSubmit": "Submit",
+  "commonPost": "Post",
+  "commonNotNow": "Not now",
+  "orderN": "Order #{id}",
+  "@orderN": {
+    "placeholders": {
+      "id": { "type": "int" }
+    }
+  },
+  "orderNumber": "#{id}",
+  "@orderNumber": {
+    "placeholders": {
+      "id": { "type": "int" }
+    }
+  },
+  "moneyRp": "Rp {amount}",
+  "@moneyRp": {
+    "placeholders": {
+      "amount": { "type": "String" }
+    }
+  },
+  "moneyRpOff": "Rp {amount} off",
+  "@moneyRpOff": {
+    "placeholders": {
+      "amount": { "type": "String" }
+    }
+  },
+  "moneyRpNegative": "- Rp {amount}",
+  "@moneyRpNegative": {
+    "placeholders": {
+      "amount": { "type": "String" }
+    }
+  },
+
+  "serviceTagShoes": "Shoes",
+  "serviceTagBags": "Bags",
+  "serviceTagDolls": "Dolls",
+  "serviceTagCostumes": "Costumes",
+  "serviceTagExpress": "Express",
+  "serviceTagIroning": "Ironing",
+  "serviceTagKiloan": "Kiloan",
+  "serviceTagDryClean": "Dry Clean",
+
+  "sortTopRated": "Top Rated",
+  "sortNearest": "Nearest",
+  "filterServices": "Filter Services",
+  "filterServicesCount": "Services ({count})",
+  "@filterServicesCount": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "filterReset": "Reset",
+  "filterApplyCount": "Apply Filters ({count})",
+  "@filterApplyCount": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+
+  "homeSpecialties": "Specialties",
+  "homeSearchHint": "Find a laundromat",
+  "homeWelcomeBack": "Welcome back!",
+  "homeGreetingFallback": "there",
+  "homeLoyaltyWallet": "Loyalty wallet",
+  "homePoints": "{count} points",
+  "@homePoints": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "homeRedeemPrompt": "Redeem your points for vouchers.",
+  "homeVouchersReady": "{count, plural, one{{count} voucher ready at checkout.} other{{count} vouchers ready at checkout.}}",
+  "@homeVouchersReady": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "homeActiveOrders": "Active Orders",
+  "homeNoActiveOrders": "No active orders right now.",
+  "homeYourOrder": "Your order",
+  "homeTapToTrack": "Order #{id} · tap to track",
+  "@homeTapToTrack": {
+    "placeholders": {
+      "id": { "type": "int" }
+    }
+  },
+  "homeActionConfirmWeighedPrice": "Action needed: confirm your weighed price",
+  "homeNearbyLaundromats": "Nearby Laundromats",
+  "homeNoLaundromatsYet": "No laundromats available yet.",
+
+  "ordersTitle": "My Orders",
+  "ordersEmptyActive": "No active orders. Place one from Discovery.",
+  "ordersEmptyHistory": "No past orders yet.",
+  "ordersLaundromatFallback": "Laundromat",
+  "ordersItemCount": "{count, plural, one{{count} item} other{{count} items}}",
+  "@ordersItemCount": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "ordersPerKgSuffix": "per kg",
+  "ordersActionConfirmPrice": "Action needed: confirm price",
+  "ordersWeighedAtPickup": "Weighed at pickup",
+
+  "vouchersTitle": "Vouchers",
+  "vouchersRedeemedToast": "Redeemed a Rp {amount} voucher!",
+  "@vouchersRedeemedToast": {
+    "placeholders": {
+      "amount": { "type": "String" }
+    }
+  },
+  "vouchersRedeemPoints": "Redeem Points",
+  "vouchersRedeemSubtitle": "Pick a reward to redeem with your points.",
+  "vouchersNoRewards": "No rewards available right now.",
+  "vouchersYourVouchers": "Your Vouchers",
+  "vouchersEmpty": "No vouchers yet. Redeem points to get one.",
+  "vouchersEarnRate": "Earn 5 points per Rp 10.000 spent.",
+  "vouchersTierPoints": "{count} points",
+  "@vouchersTierPoints": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "vouchersNeedMorePoints": "Need {count} more points",
+  "@vouchersNeedMorePoints": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "vouchersUsed": "Used",
+  "vouchersAvailableAtCheckout": "Available at checkout",
+
+  "voucherSelectTitle": "Apply a voucher",
+  "voucherSelectCountAvailable": "{count, plural, one{{count} voucher available} other{{count} vouchers available}}",
+  "@voucherSelectCountAvailable": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "voucherSelectRemoveApplied": "Remove applied voucher",
+  "voucherSelectDiscountVoucher": "Discount voucher",
+  "voucherSelectEmptyTitle": "There are no vouchers",
+  "voucherSelectEmptyBody": "Redeem your loyalty points for vouchers, then apply them here.",
+
+  "searchHint": "Search name, service, or area",
+  "searchPrompt": "Type a name, service, or area, then hit search.",
+  "searchNoMatches": "No laundromats match your search.",
+
+  "discoveryError": "Error: {error}",
+  "@discoveryError": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "discoveryNoLaundromats": "No laundromats found.",
+  "discoveryReviewCount": "({count})",
+  "@discoveryReviewCount": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "discoveryDistanceKm": "{distance} km",
+  "@discoveryDistanceKm": {
+    "placeholders": {
+      "distance": { "type": "String" }
+    }
+  },
+  "discoveryAreaHidden": "Area shown after order",
+
+  "detailReviewsCount": "Reviews ({count})",
+  "@detailReviewsCount": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "detailReviewCountSuffix": " ({count} reviews)",
+  "@detailReviewCountSuffix": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "detailAreaHidden": "Area hidden until pickup",
+  "detailServicesMenu": "Services Menu",
+  "detailNoServices": "No services listed yet.",
+  "detailCustomerReviews": "{count} Customer Reviews",
+  "@detailCustomerReviews": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "detailAddReview": "Add Review",
+  "detailNoReviews": "No reviews yet. Be the first to leave one!",
+  "detailWriteReview": "Write a Review",
+  "detailYourReview": "Your review",
+  "detailSignInToReview": "Please sign in to review.",
+  "detailReviewFailed": "Failed: {error}",
+  "@detailReviewFailed": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "detailPricePerUnit": "Rp {price} / {unit}",
+  "@detailPricePerUnit": {
+    "placeholders": {
+      "price": { "type": "String" },
+      "unit": { "type": "String" }
+    }
+  },
+  "detailUnitKg": "kg",
+  "detailUnitItem": "item",
+  "detailQuantityOfItems": "Quantity of Items",
+  "detailPieces": "{count} pcs",
+  "@detailPieces": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "detailPerKgNote": "Priced by weight at Rp {price}/kg. The laundromat weighs your laundry after pickup and sends the price — you approve it before paying.",
+  "@detailPerKgNote": {
+    "placeholders": {
+      "price": { "type": "String" }
+    }
+  },
+  "detailWashingInstructions": "Washing Instructions (Optional)",
+  "detailItemDetailsHint": "Item Details (e.g. 2 Nike Dunks, 1 Coach bag)",
+  "detailAddToBasket": "Add to Basket",
+  "detailAddToBasketPrice": "Add to Basket • Rp {price}",
+  "@detailAddToBasketPrice": {
+    "placeholders": {
+      "price": { "type": "String" }
+    }
+  },
+  "detailNewBasketTitle": "Start a new basket?",
+  "detailNewBasketBody": "Your basket has items from {name}. Adding this will clear it and start a new basket at {store}.",
+  "@detailNewBasketBody": {
+    "placeholders": {
+      "name": { "type": "String" },
+      "store": { "type": "String" }
+    }
+  },
+  "detailAnotherLaundromat": "another laundromat",
+  "detailClearAndAdd": "Clear & add",
+  "detailInBasket": "In basket",
+  "detailItemsInBasket": "{count} items in basket",
+  "@detailItemsInBasket": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "detailWeighedAtPickupArrow": "Weighed at pickup  ➔",
+  "detailBasketTotalArrow": "Rp {amount}  ➔",
+  "@detailBasketTotalArrow": {
+    "placeholders": {
+      "amount": { "type": "String" }
+    }
+  },
+
+  "orderDetailTitle": "Order Details",
+  "orderDetailPriceApprovedToast": "Price approved. Proceed to payment.",
+  "orderDetailPaymentReceived": "Payment received.",
+  "orderDetailPaymentPending": "Payment pending confirmation.",
+  "orderDetailPaymentFailed": "Payment failed. You can try again.",
+  "orderDetailPaymentClosed": "Payment window closed.",
+  "orderDetailPaymentLaunched": "Payment opened. This order updates once confirmed.",
+  "orderDetailDriverPickingUp": "Driver picking up your laundry",
+  "orderDetailDriverDelivering": "Driver delivering your laundry",
+  "orderDetailLookingForPickup": "Looking for a driver to pick up your laundry",
+  "orderDetailLookingForDelivery": "Looking for a driver to deliver your laundry",
+  "orderDetailVehicleFallback": "Vehicle",
+  "orderDetailLaundromatFallback": "Laundromat",
+  "orderDetailConfirmWeighedPrice": "Confirm your weighed price",
+  "orderDetailWeighedExplainer": "The laundromat weighed your laundry. Review the price and your items below, then approve to continue to payment.",
+  "orderDetailMeasuredWeight": "Measured weight",
+  "orderDetailKg": "{value} kg",
+  "@orderDetailKg": {
+    "placeholders": {
+      "value": { "type": "String" }
+    }
+  },
+  "orderDetailWashSubtotal": "Wash subtotal",
+  "orderDetailDeliveryFee": "Delivery fee",
+  "orderDetailDeclaredProtection": "Declared items protection",
+  "orderDetailVoucher": "Voucher",
+  "orderDetailFinalPrice": "Final price",
+  "orderDetailApproveContinue": "Approve & continue to payment",
+  "orderDetailDeclaredReceived": "Declared items  ({received}/{total} received)",
+  "@orderDetailDeclaredReceived": {
+    "placeholders": {
+      "received": { "type": "int" },
+      "total": { "type": "int" }
+    }
+  },
+  "orderDetailNotReceived": "Not received",
+  "orderDetailPaymentRequired": "Payment required",
+  "orderDetailAmountDue": "Amount due",
+  "orderDetailPayNow": "Pay now",
+  "orderDetailProgress": "Progress",
+  "orderDetailReceipt": "Receipt",
+  "orderDetailSubtotal": "Subtotal",
+  "orderDetailWeighed": "Weighed",
+  "orderDetailGrandTotal": "Grand total",
+  "orderDetailAfterWeighing": "After weighing",
+  "orderDetailPayment": "Payment",
+  "orderDetailPaymentNotStarted": "Not started",
+  "orderDetailUnitKg": "kg",
+  "orderDetailUnitPcs": "pcs",
+  "orderDetailDeclaredItems": "Declared items",
+  "orderDetailReceived": "Received",
+  "orderDetailAwaitingIntake": "Awaiting intake",
+  "orderDetailHowDidItGo": "How did it go?",
+  "orderDetailRateLaundromat": "Rate laundromat",
+  "orderDetailWarranty": "Warranty",
+  "orderDetailWarrantyOnlyDeclared": "Warranty is available only for declared items the laundromat confirmed at intake.",
+  "orderDetailWarrantyClaims": "Warranty claims",
+  "orderDetailNoClaims": "No claims filed. Tap \"Warranty\" above if something went wrong with a declared item.",
+  "orderDetailRateThisLaundromat": "Rate this laundromat",
+  "orderDetailAddCommentOptional": "Add a comment (optional)",
+  "orderDetailSignInToRate": "Please sign in to rate.",
+  "orderDetailRatingThanks": "Thanks for your rating!",
+  "orderDetailUseWarrantyTitle": "Use your warranty?",
+  "orderDetailWarrantyExplainer": "Your declared items are covered by Washly warranty. If one was lost or damaged, you can file a claim with photos and the laundromat will review it.",
+  "orderDetailCoveredItems": "Covered items",
+  "orderDetailFileClaim": "File a claim",
+  "orderDetailItemFallback": "Item #{id}",
+  "@orderDetailItemFallback": {
+    "placeholders": {
+      "id": { "type": "int" }
+    }
+  },
+  "orderDetailResolution": "Resolution: {note}",
+  "@orderDetailResolution": {
+    "placeholders": {
+      "note": { "type": "String" }
+    }
+  },
+  "orderDetailPayout": "Payout: Rp {amount} (Washly)",
+  "@orderDetailPayout": {
+    "placeholders": {
+      "amount": { "type": "String" }
+    }
+  },
+  "orderDetailFileClaimTitle": "File a warranty claim",
+  "orderDetailItem": "Item",
+  "orderDetailWhatWentWrong": "What went wrong?",
+  "orderDetailPickItemDescribe": "Pick an item and describe the issue.",
+  "orderDetailAddPhoto": "Add photo",
+  "orderDetailPhotosAttached": "{count} attached",
+  "@orderDetailPhotosAttached": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "orderDetailSubmitClaim": "Submit claim",
+  "orderDetailClaimSubmitted": "Claim submitted.",
+
+  "checkoutTitle": "Checkout Order",
+  "checkoutPickerError": "Could not open the picker: {error}",
+  "@checkoutPickerError": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "checkoutLabelItemTitle": "Label this item",
+  "checkoutLabelItemHint": "e.g. White Nike Air Force 1",
+  "checkoutEnterPickupAddress": "Please enter your pickup address.",
+  "checkoutSignInToOrder": "Please sign in again to place an order.",
+  "checkoutPaymentReceivedTitle": "Payment received",
+  "checkoutPaymentReceivedBody": "Thanks! Your payment is confirmed. Track this order in the Orders tab.",
+  "checkoutPaymentPendingTitle": "Payment pending",
+  "checkoutPaymentPendingBody": "Your payment is being processed. This order updates automatically once it is confirmed.",
+  "checkoutPaymentNotCompletedTitle": "Payment not completed",
+  "checkoutPaymentNotCompletedBody": "You closed the payment window. Your order is saved — you can pay from the Orders tab anytime.",
+  "checkoutPaymentFailedTitle": "Payment failed",
+  "checkoutPaymentFailedBody": "The payment did not go through. Your order is saved — try again from the Orders tab.",
+  "checkoutCompletePaymentTitle": "Complete your payment",
+  "checkoutCompletePaymentBody": "We opened the payment page. This order updates automatically once payment is confirmed.",
+  "checkoutOrderPlacedTitle": "Order placed",
+  "checkoutOrderPlacedPaymentError": "Your order was created, but we could not open payment: {error}. You can pay from the Orders tab.",
+  "@checkoutOrderPlacedPaymentError": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "checkoutPerKgPlacedTitle": "Order Placed",
+  "checkoutPerKgPlacedBody": "Your order is waiting for the laundromat to accept it. The final price is set after your laundry is weighed — you will pay then.",
+  "checkoutDeliveryPickupDetails": "Delivery & Pickup Details",
+  "checkoutPickupAddressLabel": "Pickup & Return Address",
+  "checkoutNotesLabel": "Notes for driver / laundromat (optional)",
+  "checkoutNotesHint": "e.g. Leave with security, house with black gate",
+  "checkoutOrderSummary": "Order Summary",
+  "checkoutDeclaredItemsOptional": "Declared items (optional)",
+  "checkoutDeclaredExplainer": "Declared items are valuables you photograph before pickup — like a jacket, branded sneakers, or a bedcover.",
+  "checkoutDeclaredBenefit": "The photo is proof of condition at drop-off, so you can file a warranty claim if an item is lost or damaged.",
+  "checkoutDeclaredFeeNote": "Adding declared items applies a one-time Rp {fee} protection fee to this order.",
+  "@checkoutDeclaredFeeNote": {
+    "placeholders": {
+      "fee": { "type": "String" }
+    }
+  },
+  "checkoutVoucherApplied": "Voucher applied",
+  "checkoutApplyVoucher": "Apply a voucher",
+  "checkoutPlaceOrder": "Place Order",
+  "checkoutPricePerKg": "Rp {price}/kg",
+  "@checkoutPricePerKg": {
+    "placeholders": {
+      "price": { "type": "String" }
+    }
+  },
+  "checkoutPiecesPrefix": "{count}pcs x ",
+  "@checkoutPiecesPrefix": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "checkoutEstimatedWashPerKg": "Estimated wash (per kg)",
+  "checkoutWashSubtotal": "Wash Subtotal",
+  "checkoutWeighedAtPickup": "Weighed at pickup",
+  "checkoutDeclaredProtection": "Declared items protection",
+  "checkoutVoucher": "Voucher",
+  "checkoutPickupDeliveryFee": "Pickup & Delivery Fee",
+  "checkoutCalculatedAtPickup": "Calculated at pickup",
+  "checkoutFinalPrice": "Final price",
+  "checkoutTotalBeforeFee": "Total (before fee)",
+  "checkoutAfterWeighing": "After weighing",
+  "checkoutPerKgFooter": "Your laundry is priced by weight. You approve the final price after it is weighed, then pay.",
+  "checkoutPerItemFooter": "The delivery fee is calculated from the pickup distance when you place the order.",
+
+  "partnerDashboardTitle": "Dashboard",
+  "partnerDashboardReport": "Report",
+  "partnerDashboardReportSaved": "Report saved to {where}.",
+  "@partnerDashboardReportSaved": {
+    "placeholders": {
+      "where": { "type": "String" }
+    }
+  },
+  "partnerDashboardRangeDay": "This day",
+  "partnerDashboardRangeMonth": "This month",
+  "partnerDashboardRangeYear": "This year",
+  "partnerDashboardRevenue": "Revenue (paid orders)",
+  "partnerDashboardInProcess": "In process",
+  "partnerDashboardCompleted": "Completed",
+  "partnerDashboardTotalOrders": "Total orders",
+  "partnerDashboardAvgReview": "Avg review · {count}",
+  "@partnerDashboardAvgReview": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "partnerDashboardNoReviewsYet": "No reviews yet",
+  "partnerDashboardSalesByProduct": "Sales by product",
+  "partnerDashboardNoSales": "No sales in this period yet.",
+  "partnerDashboardRevenueAxis": "Revenue",
+
+  "partnerOrdersTitle": "Orders",
+  "partnerOrdersActiveTab": "Active ({count})",
+  "@partnerOrdersActiveTab": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "partnerOrdersDoneTab": "Done ({count})",
+  "@partnerOrdersDoneTab": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "partnerOrdersEmptyActive": "No active orders.",
+  "partnerOrdersEmptyDone": "No completed or cancelled orders yet.",
+  "partnerOrdersOpenForOrders": "Open for orders",
+  "partnerOrdersClosed": "Closed",
+  "partnerOrdersOpenHint": "Customers can place orders with your shop.",
+  "partnerOrdersClosedHint": "Your shop is hidden from new orders.",
+  "partnerOrdersPerKg": "Per kg",
+  "partnerOrdersPerItem": "Per item",
+  "partnerOrdersItemCount": "{count, plural, one{{count} item} other{{count} items}}",
+  "@partnerOrdersItemCount": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "partnerOrdersNeedsWarranty": "Needs warranty approval",
+  "partnerOrdersWeighedAtPickup": "Weighed at pickup",
+
+  "partnerOrderDetailNotFound": "Order not found.",
+  "partnerOrderDetailPerKgOrder": "Per kg order",
+  "partnerOrderDetailPerItemOrder": "Per item order",
+  "partnerOrderDetailItems": "Items",
+  "partnerOrderDetailDeclaredItems": "Declared items",
+  "partnerOrderDetailProgress": "Progress",
+  "partnerOrderDetailWarrantyClaims": "Warranty claims",
+  "partnerOrderDetailNeedsWarranty": "Needs warranty approval",
+  "partnerOrderDetailReceived": "Received",
+  "partnerOrderDetailAwaitingAcceptance": "Awaiting acceptance",
+  "partnerOrderDetailNotReceived": "Not received",
+  "partnerOrderDetailVehicleFallback": "Vehicle",
+  "partnerOrderDetailClaimPhoto": "Claim photo",
+  "partnerOrderDetailWaitWashAfterPayment": "Waiting for the wash to begin after payment.",
+  "partnerOrderDetailWaitCustomerApprove": "Waiting for the customer to approve the weighed price.",
+  "partnerOrderDetailWaitCustomerPay": "Waiting for the customer to pay.",
+  "partnerOrderDetailWaitDriverPickup": "Waiting for the driver to pick up.",
+  "partnerOrderDetailOutForDelivery": "Out for delivery.",
+  "partnerOrderDetailDriverBringingIn": "Driver bringing the laundry in",
+  "partnerOrderDetailDriverTakingOut": "Driver taking the laundry out for delivery",
+  "partnerOrderDetailLookingForDriver": "Looking for a driver to deliver the laundry",
+  "partnerOrderDetailReject": "Reject",
+  "partnerOrderDetailAccept": "Accept",
+  "partnerOrderDetailOrderRejected": "Order rejected.",
+  "partnerOrderDetailOrderAccepted": "Order accepted.",
+  "partnerOrderDetailReceiveAndWeigh": "Receive & weigh",
+  "partnerOrderDetailConfirmReceived": "Confirm received",
+  "partnerOrderDetailMarkReady": "Mark ready for delivery",
+  "partnerOrderDetailMarkedReady": "Marked ready for delivery.",
+  "partnerOrderDetailConfirmArrived": "Confirm the laundry arrived to continue.",
+  "partnerOrderDetailConfirmEachItem": "Confirm each declared item you received. Unchecking one lets you flag a discrepancy.",
+  "partnerOrderDetailDiscrepancyHint": "What was wrong? (optional)",
+  "partnerOrderDetailMeasuredWeight": "Measured weight",
+  "partnerOrderDetailWeightLabel": "Weight (kg)",
+  "partnerOrderDetailEnterValidWeight": "Enter a valid weight.",
+  "partnerOrderDetailSubmitWeight": "Submit weight & send price",
+  "partnerOrderDetailConfirmStartWashing": "Confirm & start washing",
+  "partnerOrderDetailWeightRecorded": "Weight recorded. Price sent to the customer.",
+  "partnerOrderDetailOrderReceived": "Order received.",
+  "partnerOrderDetailResolutionNote": "Resolution: {note}",
+  "@partnerOrderDetailResolutionNote": {
+    "placeholders": {
+      "note": { "type": "String" }
+    }
+  },
+  "partnerOrderDetailResolveTitle": "{status} claim",
+  "@partnerOrderDetailResolveTitle": {
+    "placeholders": {
+      "status": { "type": "String" }
+    }
+  },
+  "partnerOrderDetailResolutionNoteLabel": "Resolution note",
+  "partnerOrderDetailPayoutLabel": "Payout amount (optional)",
+  "partnerOrderDetailApprove": "Approve",
+  "partnerOrderDetailClaimApproved": "Claim approved.",
+  "partnerOrderDetailClaimRejected": "Claim rejected.",
+  "partnerOrderDetailDeliveredCompleted": "Delivered & completed",
+
+  "partnerServicesTitle": "Services",
+  "partnerServicesAdd": "Add service",
+  "partnerServicesEdit": "Edit service",
+  "partnerServicesEmpty": "No services yet. Add your first one.",
+  "partnerServicesDeleteTitle": "Delete service?",
+  "partnerServicesDeleteBody": "Remove \"{name}\"? This cannot be undone.",
+  "@partnerServicesDeleteBody": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "partnerServicesDeleted": "Service deleted.",
+  "partnerServicesEditTooltip": "Edit",
+  "partnerServicesDeleteTooltip": "Delete",
+  "partnerServicesPricePerUnit": "Rp {price} / {unit}",
+  "@partnerServicesPricePerUnit": {
+    "placeholders": {
+      "price": { "type": "String" },
+      "unit": { "type": "String" }
+    }
+  },
+  "partnerServicesUnitKg": "kg",
+  "partnerServicesUnitItem": "item",
+  "partnerServicesNameLabel": "Service name",
+  "partnerServicesDescriptionLabel": "Description (optional)",
+  "partnerServicesPriceLabel": "Price",
+  "partnerServicesPerItem": "Per item",
+  "partnerServicesPerKg": "Per kg",
+  "partnerServicesEnterNameAndPrice": "Enter a name and a valid price.",
+  "partnerServicesAddPhoto": "Add photo",
+  "partnerServicesProductImage": "Product image",
+  "partnerServicesProductImageHint": "This is the photo customers see for this service.",
+  "partnerServicesChange": "Change",
+  "partnerServicesUpload": "Upload",
+
+  "partnerReviewsTitle": "Customer Reviews",
+  "partnerReviewsEmpty": "No reviews yet.",
+  "partnerReviewsCount": "  ·  {count, plural, one{{count} review} other{{count} reviews}}",
+  "@partnerReviewsCount": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "partnerReviewsNoComment": "No written comment.",
+
+  "partnerShopEditTitle": "Shop Profile",
+  "partnerShopEditUpdated": "Shop profile updated.",
+  "partnerShopEditNameLabel": "Shop name",
+  "partnerShopEditDescriptionLabel": "Description",
+  "partnerShopEditAreaLabel": "Area label (shown to customers)",
+  "partnerShopEditAreaHint": "e.g. Kemang, South Jakarta",
+  "partnerShopEditAddressLabel": "Exact address (private, not shown to customers)",
+  "partnerShopEditSpecialtiesLabel": "Specialties (comma separated)",
+  "partnerShopEditSpecialtiesHint": "shoes, bags, express",
+  "partnerShopEditSave": "Save shop profile",
+
+  "driverStatusBarAccepted": "Accepted",
+  "driverStatusBarPickedUp": "Picked up",
+  "driverStatusBarOnTheWay": "On the way",
+  "driverStatusBarDelivered": "Delivered",
+
+  "driverNavHome": "Home",
+  "driverNavActive": "Active",
+  "driverNavHistory": "History",
+  "driverNavProfile": "Profile",
+
+  "driverHomeErrorTitle": "Something went wrong",
+  "driverHomeErrorOk": "OK",
+  "driverHomeDeliveryOffers": "Delivery offers",
+  "driverHomeNoOffers": "No offers right now.",
+  "driverHomeTurnOnActive": "Turn on Active to receive offers.",
+  "driverHomeStatusOnDelivery": "On a delivery",
+  "driverHomeStatusActive": "Active",
+  "driverHomeStatusNotActive": "Not Active",
+  "driverHomeVehicleLine": "{vehicleType} · {plateNumber}",
+  "@driverHomeVehicleLine": {
+    "placeholders": {
+      "vehicleType": { "type": "String" },
+      "plateNumber": { "type": "String" }
+    }
+  },
+  "driverHomeTagPickup": "PICKUP",
+  "driverHomeTagDelivery": "DELIVERY",
+  "driverHomeOrderNumber": "Order #{id}",
+  "@driverHomeOrderNumber": {
+    "placeholders": {
+      "id": { "type": "int" }
+    }
+  },
+  "driverHomeLaundromatFallback": "Laundromat",
+  "driverHomeDeliverTo": "Deliver to: {address}",
+  "@driverHomeDeliverTo": {
+    "placeholders": {
+      "address": { "type": "String" }
+    }
+  },
+  "driverHomeReject": "Reject",
+  "driverHomeAccept": "Accept",
+
+  "driverActiveErrorTitle": "Could not update order",
+  "driverActiveErrorOk": "OK",
+  "driverActiveTitle": "Active Delivery",
+  "driverActiveNoActiveDelivery": "No active delivery.",
+  "driverActiveCurrentDelivery": "Current delivery · #{id}",
+  "@driverActiveCurrentDelivery": {
+    "placeholders": {
+      "id": { "type": "int" }
+    }
+  },
+  "driverActiveLaundromatFallback": "Laundromat",
+  "driverActiveCollectFrom": "Collect from: {address}",
+  "@driverActiveCollectFrom": {
+    "placeholders": {
+      "address": { "type": "String" }
+    }
+  },
+  "driverActiveDropAt": "Drop at: {name}",
+  "@driverActiveDropAt": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "driverActiveDeliverTo": "Deliver to: {address}",
+  "@driverActiveDeliverTo": {
+    "placeholders": {
+      "address": { "type": "String" }
+    }
+  },
+  "driverActiveMarkPickedUp": "Mark picked up from customer",
+  "driverActivePickedUpSuccess": "Picked up from the customer.",
+  "driverActiveMarkArrived": "Mark arrived at laundromat",
+  "driverActiveArrivedSuccess": "Dropped off at the laundromat.",
+  "driverActiveMarkDelivered": "Mark delivered",
+  "driverActiveDeliveredSuccess": "Delivery completed!",
+  "driverActiveWaitingOn": "Waiting on the laundromat / customer: {status}.",
+  "@driverActiveWaitingOn": {
+    "placeholders": {
+      "status": { "type": "String" }
+    }
+  },
+
+  "driverHistoryTitle": "Delivery History",
+  "driverHistoryEmpty": "No completed deliveries yet.",
+  "driverHistoryCount": "{count, plural, one{{count} completed delivery} other{{count} completed deliveries}}",
+  "@driverHistoryCount": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "driverHistoryLaundromatFallback": "Laundromat",
+  "driverHistoryOrderCompleted": "Order #{id} · Completed",
+  "@driverHistoryOrderCompleted": {
+    "placeholders": {
+      "id": { "type": "int" }
+    }
+  },
+  "driverHistoryOrderTotal": "Order total",
+  "driverHistoryMoneyRp": "Rp {amount}",
+  "@driverHistoryMoneyRp": {
+    "placeholders": {
+      "amount": { "type": "String" }
+    }
+  }
+}

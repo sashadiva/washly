@@ -26,7 +26,8 @@ enum OrderStatus {
   PENDING_ACCEPTANCE          // created, waiting for partner
   ACCEPTED                    // partner accepted, ready to offer to a driver
   DRIVER_ASSIGNED             // a driver accepted the pickup offer
-  PICKED_UP                   // driver collected laundry
+  PICKED_UP                   // driver collected laundry from the customer
+  AT_LAUNDROMAT               // driver dropped the laundry at the laundromat
   WEIGHED_AWAITING_CONFIRM    // per-kg only: partner weighed, awaiting customer approval
   AWAITING_PAYMENT            // payment required (per-item: at start; per-kg: after confirm)
   WASHING                     // payment confirmed, in service
@@ -191,6 +192,7 @@ model Order {
 
   distanceKm        Float?                                   // computed at creation
   deliveryFee       Float                                    // computed via deliveryFeeService
+  declaredItemsFee  Float        @default(0)                 // flat protection fee when declared items are attached
   itemsSubtotal     Float?                                   // per-item known at checkout; per-kg null until weighed
   weighedKg         Float?                                   // per-kg only, set at weigh-in
   finalTotal        Float?                                   // subtotal(+weighed) + fee - voucher

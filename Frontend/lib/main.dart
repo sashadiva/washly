@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
+import 'l10n/app_localizations.dart';
 import 'core/api_client.dart';
 import 'core/auth_store.dart';
 import 'core/cart_store.dart';
@@ -52,6 +53,7 @@ class WashlyApp extends StatelessWidget {
           locale: localeStore.locale,
           supportedLocales: const [Locale('en'), Locale('id')],
           localizationsDelegates: const [
+            AppLocalizations.delegate,
             GlobalMaterialLocalizations.delegate,
             GlobalWidgetsLocalizations.delegate,
             GlobalCupertinoLocalizations.delegate,

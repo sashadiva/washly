@@ -41,6 +41,15 @@ const ORDER_INCLUDE = {
   declaredItems: true,
   payments: { orderBy: { createdAt: 'desc' } },
   customer: { select: { id: true, name: true, phone: true } },
+  // Assigned driver's vehicle (+ contact) so the laundromat knows who is
+  // bringing the laundry in / taking it out. Null until a driver accepts a leg.
+  driver: {
+    select: {
+      vehicleType: true,
+      plateNumber: true,
+      user: { select: { name: true, phone: true } },
+    },
+  },
 } satisfies Prisma.OrderInclude;
 
 /** Whether an order's required up-front charge is settled (per-item only). */
@@ -133,10 +142,18 @@ router.post('/orders/:id/accept', async (req: Request<{ id: string }>, res: Resp
       target = nextStatus('accept', order.status, 'PARTNER');
     })) return;
 
-    const updated = await prisma.order.update({
-      where: { id: order.id },
-      data: { status: target! },
-      include: ORDER_INCLUDE,
+    const updated = await prisma.$transaction(async (tx) => {
+      await tx.order.update({
+        where: { id: order.id },
+        data: { status: target! },
+      });
+      // Declared-item intake is NOT confirmed here. The partner hasn't seen the
+      // items yet — they confirm receipt when the laundry physically arrives at
+      // the laundromat (see /orders/:id/receive), which establishes warranty.
+      return tx.order.findUnique({
+        where: { id: order.id },
+        include: ORDER_INCLUDE,
+      });
     });
 
     // Order is now ACCEPTED: offer the pickup to the nearest available driver.
@@ -226,7 +243,10 @@ router.post('/orders/:id/weigh', async (req: Request<{ id: string }>, res: Respo
 
       const finalTotal = Math.max(
         0,
-        itemsSubtotal + order.deliveryFee - order.voucherDiscount
+        itemsSubtotal +
+          order.deliveryFee +
+          order.declaredItemsFee -
+          order.voucherDiscount
       );
 
       return tx.order.update({
@@ -250,6 +270,125 @@ router.post('/orders/:id/weigh', async (req: Request<{ id: string }>, res: Respo
     }
     console.error('Error weighing order:', error);
     return res.status(500).json({ error: 'Failed to record weight.' });
+  }
+});
+
+// ---------------------------------------------------------------------------
+// POST /api/partner/orders/:id/receive  (AT_LAUNDROMAT -> next)
+// The combined "receive & weigh" step the partner performs when the laundry
+// arrives at the shop. In one call it:
+//   1. Confirms declared-item intake (or flags discrepancies) — establishes
+//      warranty coverage.
+//   2. Per-kg: records the weight, computes the price -> WEIGHED_AWAITING_CONFIRM.
+//      Per-item: advances to WASHING (already paid at checkout).
+// Body: {
+//   weighedKg?: number,                                   // required for per-kg
+//   intake?: [{ declaredItemId, confirmed: bool, discrepancyNote?: string }]
+// }
+// ---------------------------------------------------------------------------
+router.post('/orders/:id/receive', async (req: Request<{ id: string }>, res: Response) => {
+  try {
+    const loaded = await loadOwnedOrder(req, res);
+    if (!loaded) return;
+    const { order } = loaded;
+
+    if (order.status !== OrderStatus.AT_LAUNDROMAT) {
+      return res.status(409).json({
+        error: 'The laundry must be at the laundromat before you can receive it.',
+        currentStatus: order.status,
+      });
+    }
+
+    const isKilo = order.pricingModel === PricingUnit.PER_KG;
+
+    // Validate weight up front for per-kg so we don't partially apply intake.
+    const weighedKg = toFiniteNumber(req.body?.weighedKg);
+    if (isKilo && (weighedKg === null || weighedKg <= 0)) {
+      return res.status(400).json({ error: 'A positive weighedKg is required.' });
+    }
+
+    // Resolve the target status via the state machine before mutating.
+    let target: OrderStatus;
+    try {
+      target = isKilo
+        ? nextStatus('enterWeight', order.status, 'PARTNER')
+        : nextStatus('confirmPayment', order.status, 'SYSTEM');
+    } catch (e) {
+      if (e instanceof IllegalTransitionError) {
+        return res.status(409).json({ error: e.message, currentStatus: e.currentStatus });
+      }
+      throw e;
+    }
+
+    const declaredIds = new Set(order.declaredItems.map((d) => d.id));
+    const intake = Array.isArray(req.body?.intake) ? req.body.intake : [];
+
+    const updated = await prisma.$transaction(async (tx) => {
+      // 1. Apply declared-item intake. Any declared item not mentioned defaults
+      //    to confirmed received (the partner accepted the bag as-is).
+      const mentioned = new Set<number>();
+      for (const raw of intake) {
+        const did = parseInt(String(raw?.declaredItemId), 10);
+        if (isNaN(did) || !declaredIds.has(did)) continue;
+        mentioned.add(did);
+        await tx.declaredItem.update({
+          where: { id: did },
+          data: {
+            confirmedReceived: Boolean(raw?.confirmed),
+            discrepancyNote:
+              typeof raw?.discrepancyNote === 'string' &&
+              raw.discrepancyNote.trim().length > 0
+                ? raw.discrepancyNote.trim()
+                : null,
+          },
+        });
+      }
+      // Unmentioned declared items are treated as received.
+      const unmentioned = [...declaredIds].filter((id) => !mentioned.has(id));
+      if (unmentioned.length > 0) {
+        await tx.declaredItem.updateMany({
+          where: { id: { in: unmentioned } },
+          data: { confirmedReceived: true },
+        });
+      }
+
+      // 2. Per-kg: weigh + price. Per-item: just advance.
+      const data: Prisma.OrderUpdateInput = { status: target };
+      if (isKilo) {
+        const perKgItems = order.items.filter((i) => i.unit === PricingUnit.PER_KG);
+        const perItemItems = order.items.filter((i) => i.unit === PricingUnit.PER_ITEM);
+        const kgShare = perKgItems.length > 0 ? weighedKg! / perKgItems.length : 0;
+        let itemsSubtotal = 0;
+        for (const item of perKgItems) {
+          const line = item.unitPrice * kgShare;
+          itemsSubtotal += line;
+          await tx.orderItem.update({ where: { id: item.id }, data: { lineTotal: line } });
+        }
+        for (const item of perItemItems) {
+          itemsSubtotal += item.lineTotal ?? item.unitPrice * item.quantity;
+        }
+        data.weighedKg = weighedKg!;
+        data.itemsSubtotal = itemsSubtotal;
+        data.finalTotal = Math.max(
+          0,
+          itemsSubtotal + order.deliveryFee + order.declaredItemsFee - order.voucherDiscount
+        );
+      }
+
+      return tx.order.update({
+        where: { id: order.id },
+        data,
+        include: ORDER_INCLUDE,
+      });
+    });
+
+    return res.json(updated);
+  } catch (error: unknown) {
+    if (error instanceof IllegalTransitionError) {
+      return res.status(409).json({ error: error.message, currentStatus: error.currentStatus });
+    }
+    console.error('Error receiving order:', error);
+    return res.status(500).json({ error: 'Failed to receive order.' });
   }
 });
 
@@ -559,11 +698,28 @@ router.get('/dashboard', async (req: Request, res: Response) => {
       payments: { some: { status: PaymentStatus.SETTLED } },
     };
 
-    const [paidOrders, totalOrders, completedOrders] = await Promise.all([
-      prisma.order.findMany({ where: paidWhere, select: { finalTotal: true } }),
-      prisma.order.count({ where: whereBase }),
-      prisma.order.count({ where: { ...whereBase, status: OrderStatus.COMPLETED } }),
-    ]);
+    // "In process" = active (not completed, not cancelled, not just placed-
+    // unpaid). We treat anything that's been accepted and is still moving as
+    // in process.
+    const inProcessStatuses: OrderStatus[] = [
+      OrderStatus.ACCEPTED,
+      OrderStatus.DRIVER_ASSIGNED,
+      OrderStatus.PICKED_UP,
+      OrderStatus.WEIGHED_AWAITING_CONFIRM,
+      OrderStatus.AWAITING_PAYMENT,
+      OrderStatus.WASHING,
+      OrderStatus.READY_FOR_DELIVERY,
+      OrderStatus.OUT_FOR_DELIVERY,
+    ];
+
+    const [paidOrders, totalOrders, completedOrders, inProcessOrders, cancelledOrders] =
+      await Promise.all([
+        prisma.order.findMany({ where: paidWhere, select: { finalTotal: true } }),
+        prisma.order.count({ where: whereBase }),
+        prisma.order.count({ where: { ...whereBase, status: OrderStatus.COMPLETED } }),
+        prisma.order.count({ where: { ...whereBase, status: { in: inProcessStatuses } } }),
+        prisma.order.count({ where: { ...whereBase, status: OrderStatus.CANCELLED } }),
+      ]);
 
     const revenue = paidOrders.reduce((sum, o) => sum + (o.finalTotal ?? 0), 0);
 
@@ -572,10 +728,127 @@ router.get('/dashboard', async (req: Request, res: Response) => {
       paidOrderCount: paidOrders.length,
       totalOrderCount: totalOrders,
       completedOrderCount: completedOrders,
+      inProcessOrderCount: inProcessOrders,
+      cancelledOrderCount: cancelledOrders,
     });
   } catch (error: unknown) {
     console.error('Error building dashboard:', error);
     return res.status(500).json({ error: 'Failed to load dashboard.' });
+  }
+});
+
+// ---------------------------------------------------------------------------
+// GET /api/partner/reviews — all reviews for the partner's own shop
+// ---------------------------------------------------------------------------
+router.get('/reviews', async (req: Request, res: Response) => {
+  try {
+    const shop = await getOwnLaundromat(req.user!.id);
+    if (!shop) return res.status(404).json({ error: 'No laundromat found for this partner.' });
+
+    const reviews = await prisma.review.findMany({
+      where: { laundromatId: shop.id },
+      include: { user: { select: { id: true, name: true } } },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    return res.json(
+      reviews.map((r) => ({
+        id: r.id,
+        rating: r.rating,
+        comment: r.comment,
+        userName: r.user.name,
+        createdAt: r.createdAt,
+      }))
+    );
+  } catch (error: unknown) {
+    console.error('Error loading partner reviews:', error);
+    return res.status(500).json({ error: 'Failed to load reviews.' });
+  }
+});
+
+// ---------------------------------------------------------------------------
+// GET /api/partner/report?from=&to= — a sales report payload for export.
+// Summary + per-service (per-product) breakdown + status counts. Only paid
+// orders count toward revenue.
+// ---------------------------------------------------------------------------
+router.get('/report', async (req: Request, res: Response) => {
+  try {
+    const shop = await getOwnLaundromat(req.user!.id);
+    if (!shop) return res.status(404).json({ error: 'No laundromat found for this partner.' });
+
+    const { from, to } = req.query as { from?: string; to?: string };
+    const createdAt: Prisma.DateTimeFilter = {};
+    if (from) {
+      const d = new Date(from);
+      if (!isNaN(d.getTime())) createdAt.gte = d;
+    }
+    if (to) {
+      const d = new Date(to);
+      if (!isNaN(d.getTime())) createdAt.lte = d;
+    }
+    const whereBase: Prisma.OrderWhereInput = { laundromatId: shop.id };
+    if (createdAt.gte || createdAt.lte) whereBase.createdAt = createdAt;
+
+    const orders = await prisma.order.findMany({
+      where: whereBase,
+      include: { items: true, payments: true },
+      orderBy: { createdAt: 'asc' },
+    });
+
+    // Status counts.
+    const statusCounts: Record<string, number> = {};
+    for (const o of orders) {
+      statusCounts[o.status] = (statusCounts[o.status] ?? 0) + 1;
+    }
+
+    const paid = orders.filter((o) =>
+      o.payments.some((p) => p.status === PaymentStatus.SETTLED)
+    );
+    const revenue = paid.reduce((sum, o) => sum + (o.finalTotal ?? 0), 0);
+
+    // Per-service (per-product) breakdown — only from paid orders so revenue
+    // reconciles with the summary.
+    const byService = new Map<
+      string,
+      { serviceName: string; unit: string; orders: number; quantity: number; revenue: number }
+    >();
+    for (const o of paid) {
+      for (const it of o.items) {
+        const key = `${it.serviceName}__${it.unit}`;
+        const row =
+          byService.get(key) ??
+          { serviceName: it.serviceName, unit: it.unit, orders: 0, quantity: 0, revenue: 0 };
+        row.orders += 1;
+        row.quantity += it.quantity;
+        row.revenue += it.lineTotal ?? 0;
+        byService.set(key, row);
+      }
+    }
+
+    return res.json({
+      shopName: shop.name,
+      generatedAt: new Date().toISOString(),
+      from: createdAt.gte ? (createdAt.gte as Date).toISOString() : null,
+      to: createdAt.lte ? (createdAt.lte as Date).toISOString() : null,
+      summary: {
+        revenue,
+        totalOrders: orders.length,
+        paidOrders: paid.length,
+        completedOrders: statusCounts[OrderStatus.COMPLETED] ?? 0,
+        cancelledOrders: statusCounts[OrderStatus.CANCELLED] ?? 0,
+        averageOrderValue: paid.length > 0 ? revenue / paid.length : 0,
+      },
+      perService: Array.from(byService.values()).sort((a, b) => b.revenue - a.revenue),
+      orders: orders.map((o) => ({
+        id: o.id,
+        date: o.createdAt.toISOString(),
+        status: o.status,
+        total: o.finalTotal ?? 0,
+      })),
+    });
+  } catch (error: unknown) {
+    console.error('Error building report:', error);
+    return res.status(500).json({ error: 'Failed to build report.' });
   }
 });
 

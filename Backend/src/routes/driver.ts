@@ -4,8 +4,6 @@ import {
   OfferStatus,
   DriverAvailability,
   OrderStatus,
-  PricingUnit,
-  PaymentStatus,
 } from '@prisma/client';
 import { prisma } from '../config/prisma.js';
 import { authGuard } from '../middleware/authGuard.js';
@@ -35,7 +33,18 @@ async function getOwnProfile(userId: number) {
 
 const ORDER_INCLUDE = {
   items: true,
-  laundromat: { select: { id: true, name: true, areaLabel: true, imageUrl: true } },
+  // Driver-facing: coords are OK here (drivers need the map). The customer
+  // route deliberately omits laundromat coords.
+  laundromat: {
+    select: {
+      id: true,
+      name: true,
+      areaLabel: true,
+      imageUrl: true,
+      latitude: true,
+      longitude: true,
+    },
+  },
 } satisfies Prisma.OrderInclude;
 
 // ---------------------------------------------------------------------------
@@ -195,6 +204,8 @@ async function loadAssignedOrder(req: Request<{ id: string }>, res: Response) {
 
 // ---------------------------------------------------------------------------
 // POST /api/driver/orders/:id/picked-up  (DRIVER_ASSIGNED -> PICKED_UP)
+// The driver collected the laundry from the customer. The laundry still has to
+// be dropped at the laundromat (see /arrived) before weighing/washing.
 // ---------------------------------------------------------------------------
 router.post('/orders/:id/picked-up', async (req: Request<{ id: string }>, res: Response) => {
   try {
@@ -212,30 +223,52 @@ router.post('/orders/:id/picked-up', async (req: Request<{ id: string }>, res: R
       throw e;
     }
 
-    // Per-item orders are paid up front. Once picked up, advance straight to
-    // WASHING (no weigh-in step). Per-kg stays PICKED_UP for the partner to weigh.
-    let finalStatus: OrderStatus = target;
-    if (order.pricingModel === PricingUnit.PER_ITEM) {
-      const settled = await prisma.payment.findFirst({
-        where: { orderId: order.id, status: PaymentStatus.SETTLED },
-      });
-      if (settled) {
-        try {
-          finalStatus = nextStatus('confirmPayment', target, 'SYSTEM');
-        } catch (e) {
-          if (!(e instanceof IllegalTransitionError)) throw e;
-        }
-      }
-    }
-
     const updated = await prisma.order.update({
       where: { id: order.id },
-      data: { status: finalStatus },
+      data: { status: target },
       include: ORDER_INCLUDE,
     });
     return res.json(updated);
   } catch (error: unknown) {
     console.error('Error marking picked up:', error);
+    return res.status(500).json({ error: 'Failed to update order.' });
+  }
+});
+
+// ---------------------------------------------------------------------------
+// POST /api/driver/orders/:id/arrived  (PICKED_UP -> AT_LAUNDROMAT)
+// The driver dropped the laundry at the laundromat. For per-item orders (paid
+// up front), arrival advances straight to WASHING once payment is settled.
+// Per-kg orders stay AT_LAUNDROMAT so the partner can weigh them.
+// ---------------------------------------------------------------------------
+router.post('/orders/:id/arrived', async (req: Request<{ id: string }>, res: Response) => {
+  try {
+    const loaded = await loadAssignedOrder(req, res);
+    if (!loaded) return;
+    const { order } = loaded;
+
+    let target: OrderStatus;
+    try {
+      target = nextStatus('arriveAtLaundromat', order.status, 'DRIVER');
+    } catch (e) {
+      if (e instanceof IllegalTransitionError) {
+        return res.status(409).json({ error: e.message, currentStatus: e.currentStatus });
+      }
+      throw e;
+    }
+
+    // Arrival always lands at AT_LAUNDROMAT. The partner then performs the
+    // "receive" step (confirm declared-item intake + weigh for per-kg), which
+    // is what advances the order onward — including per-item -> WASHING. This
+    // guarantees the partner confirms the items for every order type.
+    const updated = await prisma.order.update({
+      where: { id: order.id },
+      data: { status: target },
+      include: ORDER_INCLUDE,
+    });
+    return res.json(updated);
+  } catch (error: unknown) {
+    console.error('Error marking arrived at laundromat:', error);
     return res.status(500).json({ error: 'Failed to update order.' });
   }
 });
@@ -364,6 +397,7 @@ router.get('/active', async (req: Request, res: Response) => {
           in: [
             OrderStatus.DRIVER_ASSIGNED,
             OrderStatus.PICKED_UP,
+            OrderStatus.AT_LAUNDROMAT,
             OrderStatus.WEIGHED_AWAITING_CONFIRM,
             OrderStatus.AWAITING_PAYMENT,
             OrderStatus.WASHING,

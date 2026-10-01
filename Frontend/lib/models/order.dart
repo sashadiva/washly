@@ -2,12 +2,15 @@
 // response shape (see Backend/src/routes/order.ts). Hand-written, no codegen,
 // matching the existing model conventions.
 
+import '../l10n/app_localizations.dart';
+
 /// The 11 lifecycle states from the backend `OrderStatus` enum.
 enum OrderStatus {
   pendingAcceptance,
   accepted,
   driverAssigned,
   pickedUp,
+  atLaundromat,
   weighedAwaitingConfirm,
   awaitingPayment,
   washing,
@@ -28,6 +31,8 @@ OrderStatus orderStatusFromString(String value) {
       return OrderStatus.driverAssigned;
     case 'PICKED_UP':
       return OrderStatus.pickedUp;
+    case 'AT_LAUNDROMAT':
+      return OrderStatus.atLaundromat;
     case 'WEIGHED_AWAITING_CONFIRM':
       return OrderStatus.weighedAwaitingConfirm;
     case 'AWAITING_PAYMENT':
@@ -48,6 +53,39 @@ OrderStatus orderStatusFromString(String value) {
 }
 
 extension OrderStatusX on OrderStatus {
+  /// Localized label for chips and timelines. Prefer this everywhere the user
+  /// sees the status. [label] remains an English fallback for non-UI uses.
+  String localizedLabel(AppLocalizations l10n) {
+    switch (this) {
+      case OrderStatus.pendingAcceptance:
+        return l10n.orderStatusPendingAcceptance;
+      case OrderStatus.accepted:
+        return l10n.orderStatusAccepted;
+      case OrderStatus.driverAssigned:
+        return l10n.orderStatusDriverAssigned;
+      case OrderStatus.pickedUp:
+        return l10n.orderStatusPickedUp;
+      case OrderStatus.atLaundromat:
+        return l10n.orderStatusAtLaundromat;
+      case OrderStatus.weighedAwaitingConfirm:
+        return l10n.orderStatusWeighedAwaitingConfirm;
+      case OrderStatus.awaitingPayment:
+        return l10n.orderStatusAwaitingPayment;
+      case OrderStatus.washing:
+        return l10n.orderStatusWashing;
+      case OrderStatus.readyForDelivery:
+        return l10n.orderStatusReadyForDelivery;
+      case OrderStatus.outForDelivery:
+        return l10n.orderStatusOutForDelivery;
+      case OrderStatus.completed:
+        return l10n.orderStatusCompleted;
+      case OrderStatus.cancelled:
+        return l10n.orderStatusCancelled;
+      case OrderStatus.unknown:
+        return l10n.orderStatusUnknown;
+    }
+  }
+
   /// Human-readable label for chips and timelines.
   String get label {
     switch (this) {
@@ -58,7 +96,9 @@ extension OrderStatusX on OrderStatus {
       case OrderStatus.driverAssigned:
         return 'Driver assigned';
       case OrderStatus.pickedUp:
-        return 'Picked up';
+        return 'Picked up from you';
+      case OrderStatus.atLaundromat:
+        return 'At the laundromat';
       case OrderStatus.weighedAwaitingConfirm:
         return 'Awaiting your confirmation';
       case OrderStatus.awaitingPayment:
@@ -177,18 +217,49 @@ class OrderPayment {
   }
 }
 
+/// The assigned driver's vehicle + contact, shown to the customer and partner
+/// during the pickup/delivery legs. Null until a driver accepts a leg.
+class OrderDriver {
+  final String vehicleType;
+  final String plateNumber;
+  final String? name;
+  final String? phone;
+
+  OrderDriver({
+    required this.vehicleType,
+    required this.plateNumber,
+    this.name,
+    this.phone,
+  });
+
+  factory OrderDriver.fromJson(Map<String, dynamic> json) {
+    final user = json['user'] as Map<String, dynamic>?;
+    return OrderDriver(
+      vehicleType: json['vehicleType'] as String? ?? '',
+      plateNumber: json['plateNumber'] as String? ?? '',
+      name: user?['name'] as String?,
+      phone: user?['phone'] as String?,
+    );
+  }
+}
+
 /// Minimal laundromat summary embedded on an order (location-safe).
 class OrderLaundromat {
   final int id;
   final String name;
   final String? areaLabel;
   final String? imageUrl;
+  // Present only on driver-facing responses (customers never get coords).
+  final double? latitude;
+  final double? longitude;
 
   OrderLaundromat({
     required this.id,
     required this.name,
     this.areaLabel,
     this.imageUrl,
+    this.latitude,
+    this.longitude,
   });
 
   factory OrderLaundromat.fromJson(Map<String, dynamic> json) {
@@ -197,6 +268,8 @@ class OrderLaundromat {
       name: json['name'] as String,
       areaLabel: json['areaLabel'] as String?,
       imageUrl: json['imageUrl'] as String?,
+      latitude: (json['latitude'] as num?)?.toDouble(),
+      longitude: (json['longitude'] as num?)?.toDouble(),
     );
   }
 }
@@ -211,6 +284,7 @@ class Order {
 
   final double? distanceKm;
   final double deliveryFee;
+  final double declaredItemsFee;
   final double? itemsSubtotal;
   final double? weighedKg;
   final double? finalTotal;
@@ -220,6 +294,7 @@ class Order {
   final DateTime updatedAt;
 
   final OrderLaundromat? laundromat;
+  final OrderDriver? driver;
   final List<OrderItem> items;
   final List<DeclaredItem> declaredItems;
   final List<OrderPayment> payments;
@@ -233,6 +308,7 @@ class Order {
     this.notes,
     this.distanceKm,
     required this.deliveryFee,
+    this.declaredItemsFee = 0,
     this.itemsSubtotal,
     this.weighedKg,
     this.finalTotal,
@@ -240,6 +316,7 @@ class Order {
     required this.createdAt,
     required this.updatedAt,
     this.laundromat,
+    this.driver,
     required this.items,
     required this.declaredItems,
     required this.payments,
@@ -266,6 +343,7 @@ class Order {
       notes: json['notes'] as String?,
       distanceKm: optDouble(json['distanceKm']),
       deliveryFee: (json['deliveryFee'] as num?)?.toDouble() ?? 0,
+      declaredItemsFee: (json['declaredItemsFee'] as num?)?.toDouble() ?? 0,
       itemsSubtotal: optDouble(json['itemsSubtotal']),
       weighedKg: optDouble(json['weighedKg']),
       finalTotal: optDouble(json['finalTotal']),
@@ -275,6 +353,9 @@ class Order {
       laundromat: json['laundromat'] == null
           ? null
           : OrderLaundromat.fromJson(json['laundromat'] as Map<String, dynamic>),
+      driver: json['driver'] == null
+          ? null
+          : OrderDriver.fromJson(json['driver'] as Map<String, dynamic>),
       items: (json['items'] as List? ?? [])
           .map((e) => OrderItem.fromJson(e as Map<String, dynamic>))
           .toList(),

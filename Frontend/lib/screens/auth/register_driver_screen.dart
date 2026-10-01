@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/auth_store.dart';
 import '../../core/session.dart';
+import '../../l10n/app_localizations.dart';
 import '../../services/auth_service.dart';
 import '../../theme/app_theme.dart';
 import 'register_customer_screen.dart' show AuthField, AuthValidators, AuthButtonSpinner;
@@ -71,9 +72,10 @@ class _RegisterDriverScreenState extends State<RegisterDriverScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Driver sign up'),
+        title: Text(l10n.registerDriverTitle),
         bottom: const PreferredSize(
           preferredSize: Size.fromHeight(1),
           child: Divider(height: 1, thickness: 1, color: AppColors.border),
@@ -88,47 +90,62 @@ class _RegisterDriverScreenState extends State<RegisterDriverScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                AuthField(controller: _name, label: 'Full name'),
+                AuthField(
+                  controller: _name,
+                  label: l10n.commonFullNameLabel,
+                  requiredMessage:
+                      l10n.commonFieldRequired(l10n.commonFullNameLabel),
+                ),
                 const SizedBox(height: AppSpacing.lg),
                 AuthField(
                   controller: _email,
-                  label: 'Email',
+                  label: l10n.commonEmailLabel,
                   keyboardType: TextInputType.emailAddress,
-                  validator: AuthValidators.email,
+                  validator: AuthValidators.email(l10n),
                 ),
                 const SizedBox(height: AppSpacing.lg),
                 AuthField(
                   controller: _phone,
-                  label: 'Phone',
+                  label: l10n.commonPhoneLabel,
                   keyboardType: TextInputType.phone,
+                  requiredMessage:
+                      l10n.commonFieldRequired(l10n.commonPhoneLabel),
                 ),
                 const SizedBox(height: AppSpacing.lg),
                 AuthField(
-                    controller: _vehicleType,
-                    label: 'Vehicle type (e.g. motorcycle)'),
+                  controller: _vehicleType,
+                  label: l10n.registerDriverVehicleTypeLabel,
+                  requiredMessage: l10n.commonFieldRequired(
+                      l10n.registerDriverVehicleTypeLabel),
+                ),
                 const SizedBox(height: AppSpacing.lg),
-                AuthField(controller: _plateNumber, label: 'Plate number'),
+                AuthField(
+                  controller: _plateNumber,
+                  label: l10n.registerDriverPlateNumberLabel,
+                  requiredMessage: l10n.commonFieldRequired(
+                      l10n.registerDriverPlateNumberLabel),
+                ),
                 const SizedBox(height: AppSpacing.lg),
                 AuthField(
                   controller: _password,
-                  label: 'Password',
+                  label: l10n.commonPasswordLabel,
                   obscure: true,
-                  validator: AuthValidators.password,
+                  validator: AuthValidators.password(l10n),
                 ),
                 const SizedBox(height: AppSpacing.lg),
                 AuthField(
                   controller: _confirmPassword,
-                  label: 'Confirm password',
+                  label: l10n.commonConfirmPasswordLabel,
                   obscure: true,
-                  validator:
-                      AuthValidators.confirmPassword(() => _password.text),
+                  validator: AuthValidators.confirmPassword(
+                      l10n, () => _password.text),
                 ),
                 const SizedBox(height: AppSpacing.xxl),
                 ElevatedButton(
                   onPressed: _submitting ? null : _submit,
                   child: _submitting
                       ? const AuthButtonSpinner()
-                      : const Text('Create account'),
+                      : Text(l10n.commonCreateAccount),
                 ),
               ],
             ),

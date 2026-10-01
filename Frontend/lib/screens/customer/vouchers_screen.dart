@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../l10n/app_localizations.dart';
 import '../../models/wallet.dart';
 import '../../services/loyalty_service.dart';
 import '../../theme/app_theme.dart';
@@ -33,6 +34,7 @@ class _VouchersScreenState extends State<VouchersScreen> {
   }
 
   Future<void> _redeem(RewardTier tier) async {
+    final l10n = AppLocalizations.of(context);
     setState(() => _redeemingTierId = tier.id);
     try {
       await _loyalty.redeem(tier.id);
@@ -40,7 +42,7 @@ class _VouchersScreenState extends State<VouchersScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-              'Redeemed a Rp ${tier.amountOff.toStringAsFixed(0)} voucher!'),
+              l10n.vouchersRedeemedToast(tier.amountOff.toStringAsFixed(0))),
           backgroundColor: AppColors.success,
         ),
       );
@@ -60,8 +62,9 @@ class _VouchersScreenState extends State<VouchersScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
-      appBar: AppBar(title: const Text('Vouchers')),
+      appBar: AppBar(title: Text(l10n.vouchersTitle)),
       body: FutureBuilder<Wallet>(
         future: _future,
         builder: (context, snapshot) {
@@ -89,28 +92,29 @@ class _VouchersScreenState extends State<VouchersScreen> {
           return RefreshIndicator(
             onRefresh: _refresh,
             child: ListView(
-              padding: const EdgeInsets.all(AppSpacing.lg),
+              padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.lg, AppSpacing.lg, AppSpacing.lg, 100),
               children: [
-                _balanceCard(balance),
+                _balanceCard(l10n, balance),
                 const SizedBox(height: AppSpacing.xxl),
-                Text('Redeem Points', style: AppTypography.heading1),
+                Text(l10n.vouchersRedeemPoints, style: AppTypography.heading1),
                 const SizedBox(height: AppSpacing.xs),
-                Text('Pick a reward to redeem with your points.',
+                Text(l10n.vouchersRedeemSubtitle,
                     style: AppTypography.caption),
                 const SizedBox(height: AppSpacing.md),
                 if (tiers.isEmpty)
-                  Text('No rewards available right now.',
+                  Text(l10n.vouchersNoRewards,
                       style: AppTypography.body)
                 else
-                  ...tiers.map((t) => _tierCard(t, balance)),
+                  ...tiers.map((t) => _tierCard(l10n, t, balance)),
                 const SizedBox(height: AppSpacing.xxl),
-                Text('Your Vouchers', style: AppTypography.heading1),
+                Text(l10n.vouchersYourVouchers, style: AppTypography.heading1),
                 const SizedBox(height: AppSpacing.md),
                 if (vouchers.isEmpty)
-                  Text('No vouchers yet. Redeem points to get one.',
+                  Text(l10n.vouchersEmpty,
                       style: AppTypography.body)
                 else
-                  ...vouchers.map(_voucherTile),
+                  ...vouchers.map((v) => _voucherTile(l10n, v)),
                 const SizedBox(height: AppSpacing.xl),
               ],
             ),
@@ -120,7 +124,7 @@ class _VouchersScreenState extends State<VouchersScreen> {
     );
   }
 
-  Widget _balanceCard(int balance) {
+  Widget _balanceCard(AppLocalizations l10n, int balance) {
     return Container(
       padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
@@ -140,7 +144,7 @@ class _VouchersScreenState extends State<VouchersScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  '$balance points',
+                  l10n.homePoints(balance),
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 22,
@@ -149,7 +153,7 @@ class _VouchersScreenState extends State<VouchersScreen> {
                 ),
                 const SizedBox(height: AppSpacing.xs),
                 Text(
-                  'Earn 5 points per Rp 10.000 spent.',
+                  l10n.vouchersEarnRate,
                   style: TextStyle(
                     color: Colors.white.withValues(alpha: 0.9),
                     fontSize: 12,
@@ -163,7 +167,7 @@ class _VouchersScreenState extends State<VouchersScreen> {
     );
   }
 
-  Widget _tierCard(RewardTier tier, int balance) {
+  Widget _tierCard(AppLocalizations l10n, RewardTier tier, int balance) {
     final canRedeem = balance >= tier.points;
     final busy = _redeemingTierId == tier.id;
     final anyBusy = _redeemingTierId != null;
@@ -194,14 +198,14 @@ class _VouchersScreenState extends State<VouchersScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Rp ${tier.amountOff.toStringAsFixed(0)} off',
+                Text(l10n.moneyRpOff(tier.amountOff.toStringAsFixed(0)),
                     style: AppTypography.subheading),
                 const SizedBox(height: AppSpacing.xs),
-                Text('${tier.points} points',
+                Text(l10n.vouchersTierPoints(tier.points),
                     style: AppTypography.caption),
                 if (!canRedeem) ...[
                   const SizedBox(height: AppSpacing.xs),
-                  Text('Need ${tier.points - balance} more points',
+                  Text(l10n.vouchersNeedMorePoints(tier.points - balance),
                       style: AppTypography.caption
                           .copyWith(color: AppColors.textMuted)),
                 ],
@@ -225,7 +229,7 @@ class _VouchersScreenState extends State<VouchersScreen> {
                       child: CircularProgressIndicator(
                           color: Colors.white, strokeWidth: 2),
                     )
-                  : const Text('Redeem'),
+                  : Text(l10n.commonRedeem),
             ),
           ),
         ],
@@ -233,7 +237,7 @@ class _VouchersScreenState extends State<VouchersScreen> {
     );
   }
 
-  Widget _voucherTile(Voucher v) {
+  Widget _voucherTile(AppLocalizations l10n, Voucher v) {
     return Container(
       margin: const EdgeInsets.only(bottom: AppSpacing.sm),
       decoration: BoxDecoration(
@@ -265,11 +269,11 @@ class _VouchersScreenState extends State<VouchersScreen> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                      'Rp ${v.amountOff.toStringAsFixed(0)} off',
+                      l10n.moneyRpOff(v.amountOff.toStringAsFixed(0)),
                       style: AppTypography.subheading,
                     ),
                     Text(
-                      v.used ? 'Used' : 'Available at checkout',
+                      v.used ? l10n.vouchersUsed : l10n.vouchersAvailableAtCheckout,
                       style: AppTypography.caption.copyWith(
                         color:
                             v.used ? AppColors.textMuted : AppColors.success,

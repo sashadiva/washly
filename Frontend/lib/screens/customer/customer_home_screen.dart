@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/auth_store.dart';
 import '../../core/cart_store.dart';
+import '../../l10n/app_localizations.dart';
 import '../../models/laundromat.dart';
 import '../../models/order.dart';
 import '../../models/wallet.dart';
@@ -48,14 +49,35 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
   late Future<Wallet> _walletFuture;
   late Future<List<Laundromat>> _nearbyFuture;
 
+  // Tag value (sent to Discovery, kept unchanged) + icon. The visible label is
+  // resolved from l10n at build time.
   static const _specialties = [
-    ('Shoes', 'shoes', Icons.ice_skating_outlined),
-    ('Bags', 'bags', Icons.work_outline),
-    ('Kiloan', 'kiloan', Icons.local_laundry_service_outlined),
-    ('Express', 'express', Icons.bolt_outlined),
-    ('Dolls', 'dolls', Icons.toys_outlined),
-    ('Dry Clean', 'dry clean', Icons.dry_cleaning_outlined),
+    ('shoes', Icons.ice_skating_outlined),
+    ('bags', Icons.work_outline),
+    ('kiloan', Icons.local_laundry_service_outlined),
+    ('express', Icons.bolt_outlined),
+    ('dolls', Icons.toys_outlined),
+    ('dry clean', Icons.dry_cleaning_outlined),
   ];
+
+  String _specialtyLabel(AppLocalizations l10n, String tag) {
+    switch (tag) {
+      case 'shoes':
+        return l10n.serviceTagShoes;
+      case 'bags':
+        return l10n.serviceTagBags;
+      case 'kiloan':
+        return l10n.serviceTagKiloan;
+      case 'express':
+        return l10n.serviceTagExpress;
+      case 'dolls':
+        return l10n.serviceTagDolls;
+      case 'dry clean':
+        return l10n.serviceTagDryClean;
+      default:
+        return tag;
+    }
+  }
 
   @override
   void initState() {
@@ -84,7 +106,11 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
       MaterialPageRoute(builder: (_) => const VouchersScreen()),
     );
     // Refresh the wallet on return in case a voucher was redeemed.
-    if (mounted) setState(() => _walletFuture = _loyalty.wallet());
+    if (mounted) {
+      setState(() {
+        _walletFuture = _loyalty.wallet();
+      });
+    }
   }
 
   void _openSpecialty(String tag) {
@@ -96,27 +122,29 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final name = context.watch<AuthStore>().currentUser?.name ?? '';
     return Scaffold(
       body: SafeArea(
         child: RefreshIndicator(
           onRefresh: _refresh,
           child: ListView(
-            padding: const EdgeInsets.all(AppSpacing.lg),
+            padding: const EdgeInsets.fromLTRB(
+                AppSpacing.lg, AppSpacing.lg, AppSpacing.lg, 100),
             children: [
               _brandHeader(),
               const SizedBox(height: AppSpacing.lg),
-              _searchBar(),
+              _searchBar(l10n),
               const SizedBox(height: AppSpacing.xxl),
-              _heroWithLoyalty(name),
+              _heroWithLoyalty(l10n, name),
               const SizedBox(height: AppSpacing.xxl),
-              _activeOrderSection(),
+              _activeOrderSection(l10n),
               const SizedBox(height: AppSpacing.xxl),
-              Text('Specialties', style: AppTypography.heading1),
+              Text(l10n.homeSpecialties, style: AppTypography.heading1),
               const SizedBox(height: AppSpacing.md),
-              _specialtyGrid(),
+              _specialtyGrid(l10n),
               const SizedBox(height: AppSpacing.xxl),
-              _nearbySection(),
+              _nearbySection(l10n),
               const SizedBox(height: AppSpacing.xl),
             ],
           ),
@@ -208,7 +236,7 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
 
   // 1. Search bar --------------------------------------------------------------
 
-  Widget _searchBar() {
+  Widget _searchBar(AppLocalizations l10n) {
     return GestureDetector(
       onTap: () {
         Navigator.push(
@@ -237,7 +265,7 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
           children: [
             const Icon(Icons.search, color: AppColors.textMuted),
             const SizedBox(width: AppSpacing.md),
-            Text('Find a laundromat', style: AppTypography.body),
+            Text(l10n.homeSearchHint, style: AppTypography.body),
           ],
         ),
       ),
@@ -246,7 +274,7 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
 
   // 2. Hero + loyalty ----------------------------------------------------------
 
-  Widget _heroWithLoyalty(String name) {
+  Widget _heroWithLoyalty(AppLocalizations l10n, String name) {
     return FutureBuilder<Wallet>(
       future: _walletFuture,
       builder: (context, snapshot) {
@@ -272,9 +300,9 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      'Welcome back!',
-                      style: TextStyle(
+                    Text(
+                      l10n.homeWelcomeBack,
+                      style: const TextStyle(
                         color: Colors.white,
                         fontSize: 14,
                         fontWeight: FontWeight.normal,
@@ -282,7 +310,7 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
                     ),
                     const SizedBox(height: AppSpacing.xs),
                     Text(
-                      name.isEmpty ? 'there' : name,
+                      name.isEmpty ? l10n.homeGreetingFallback : name,
                       style: const TextStyle(
                         color: Colors.white,
                         fontSize: 26,
@@ -311,7 +339,9 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
                               const SizedBox(width: AppSpacing.sm),
                               Expanded(
                                 child: Text(
-                                  loading ? 'Loyalty wallet' : '$balance points',
+                                  loading
+                                      ? l10n.homeLoyaltyWallet
+                                      : l10n.homePoints(balance),
                                   style: const TextStyle(
                                     color: Colors.white,
                                     fontSize: 18,
@@ -333,8 +363,8 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
                           const SizedBox(height: AppSpacing.xs),
                           Text(
                             vouchers.isEmpty
-                                ? 'Redeem your points for vouchers.'
-                                : '${vouchers.length} voucher${vouchers.length == 1 ? '' : 's'} ready at checkout.',
+                                ? l10n.homeRedeemPrompt
+                                : l10n.homeVouchersReady(vouchers.length),
                             style: TextStyle(
                               color: Colors.white.withValues(alpha: 0.9),
                               fontSize: 12,
@@ -352,7 +382,7 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
                                 foregroundColor: AppColors.primaryDark,
                                 minimumSize: const Size(0, 44),
                               ),
-                              child: const Text('Redeem'),
+                              child: Text(l10n.commonRedeem),
                             ),
                           ),
                         ],
@@ -370,7 +400,7 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
 
   // 3. Active orders -----------------------------------------------------------
 
-  Widget _activeOrderSection() {
+  Widget _activeOrderSection(AppLocalizations l10n) {
     return FutureBuilder<List<Order>>(
       future: _ordersFuture,
       builder: (context, snapshot) {
@@ -395,8 +425,8 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
                     const _AnimatedDeliveryIcon(),
                     const SizedBox(width: AppSpacing.sm),
                   ],
-                  const Expanded(
-                    child: Text('Active Orders',
+                  Expanded(
+                    child: Text(l10n.homeActiveOrders,
                         style: AppTypography.subheading),
                   ),
                 ],
@@ -408,10 +438,10 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
                   child: Center(child: CircularProgressIndicator()),
                 )
               else if (!hasActive)
-                Text('No active orders right now.',
+                Text(l10n.homeNoActiveOrders,
                     style: AppTypography.body)
               else
-                _activeOrderTile(active.first),
+                _activeOrderTile(l10n, active.first),
             ],
           ),
         );
@@ -419,7 +449,7 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
     );
   }
 
-  Widget _activeOrderTile(Order order) {
+  Widget _activeOrderTile(AppLocalizations l10n, Order order) {
     return InkWell(
       borderRadius: BorderRadius.circular(AppRadius.sm),
       onTap: () => _openOrder(order.id),
@@ -431,18 +461,18 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
             Row(
               children: [
                 Expanded(
-                  child: Text(order.laundromat?.name ?? 'Your order',
+                  child: Text(order.laundromat?.name ?? l10n.homeYourOrder,
                       style: AppTypography.heading2),
                 ),
                 StatusChip(status: order.status),
               ],
             ),
             const SizedBox(height: AppSpacing.xs),
-            Text('Order #${order.id} · tap to track',
+            Text(l10n.homeTapToTrack(order.id),
                 style: AppTypography.caption),
             if (order.needsWeightApproval) ...[
               const SizedBox(height: AppSpacing.sm),
-              Text('Action needed: confirm your weighed price',
+              Text(l10n.homeActionConfirmWeighedPrice,
                   style: AppTypography.caption
                       .copyWith(color: AppColors.primaryDark)),
             ],
@@ -454,7 +484,7 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
 
   // 4. Specialties grid --------------------------------------------------------
 
-  Widget _specialtyGrid() {
+  Widget _specialtyGrid(AppLocalizations l10n) {
     return GridView.count(
       crossAxisCount: 2,
       shrinkWrap: true,
@@ -465,7 +495,7 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
       children: _specialties.map((s) {
         return InkWell(
           borderRadius: BorderRadius.circular(AppRadius.md),
-          onTap: () => _openSpecialty(s.$2),
+          onTap: () => _openSpecialty(s.$1),
           child: Container(
             padding: const EdgeInsets.symmetric(
               horizontal: AppSpacing.md,
@@ -484,12 +514,12 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
                     color: AppColors.primaryLight,
                     borderRadius: BorderRadius.circular(AppRadius.sm),
                   ),
-                  child: Icon(s.$3, size: 20, color: AppColors.primary),
+                  child: Icon(s.$2, size: 20, color: AppColors.primary),
                 ),
                 const SizedBox(width: AppSpacing.sm),
                 Expanded(
                   child: Text(
-                    s.$1,
+                    _specialtyLabel(l10n, s.$1),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: AppTypography.subheading,
@@ -505,14 +535,14 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
 
   // 5. Nearby laundromats ------------------------------------------------------
 
-  Widget _nearbySection() {
+  Widget _nearbySection(AppLocalizations l10n) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           children: [
-            const Expanded(
-              child: Text('Nearby Laundromats',
+            Expanded(
+              child: Text(l10n.homeNearbyLaundromats,
                   style: AppTypography.heading1),
             ),
             TextButton(
@@ -522,7 +552,7 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
                   MaterialPageRoute(builder: (_) => const DiscoveryScreen()),
                 );
               },
-              child: const Text('See all'),
+              child: Text(l10n.commonSeeAll),
             ),
           ],
         ),
@@ -544,7 +574,7 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
             }
             final nearby = (snapshot.data ?? []).take(2).toList();
             if (nearby.isEmpty) {
-              return Text('No laundromats available yet.',
+              return Text(l10n.homeNoLaundromatsYet,
                   style: AppTypography.body);
             }
             // Reuse Discovery's full card, but drop its default horizontal

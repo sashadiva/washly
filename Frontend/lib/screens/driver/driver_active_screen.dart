@@ -1,11 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:latlong2/latlong.dart';
+import '../../l10n/app_localizations.dart';
+import '../../models/driver.dart';
 import '../../models/order.dart';
 import '../../services/driver_service.dart';
 import '../../theme/app_theme.dart';
-import '../../widgets/status_timeline.dart';
+import '../../widgets/driver_status_bar.dart';
+import '../../widgets/tracking_map.dart';
 
-/// Driver Active tab: the current assignment with contextual actions
-/// (mark picked up, mark delivered). Empty when nothing is assigned.
+/// Driver Active tab (Gojek-style): a full-screen map with the laundromat +
+/// driver pins and route line, and a draggable bottom sheet (peek -> full
+/// screen) holding the current delivery's status and action.
 class DriverActiveScreen extends StatefulWidget {
   const DriverActiveScreen({super.key});
 
@@ -15,34 +20,93 @@ class DriverActiveScreen extends StatefulWidget {
 
 class _DriverActiveScreenState extends State<DriverActiveScreen> {
   final _service = DriverService();
-  late Future<Order?> _future;
+
+  DriverProfile? _profile;
+  Order? _active;
+  bool _loading = true;
   bool _busy = false;
+
+  static const _fallback = LatLng(-6.2600, 106.8130);
 
   @override
   void initState() {
     super.initState();
-    _future = _service.active();
+    _load();
   }
 
-  Future<void> _reload() async {
-    setState(() => _future = _service.active());
-    await _future;
+  Future<void> _load() async {
+    setState(() => _loading = true);
+    try {
+      final p = await _service.profile();
+      if (mounted) setState(() => _profile = p);
+    } catch (_) {}
+    try {
+      final o = await _service.active();
+      // Always reflect the result — including null, which means the delivery
+      // was completed and we should switch to the "no active delivery" view.
+      if (mounted) setState(() => _active = o);
+    } catch (_) {
+      // Only a genuine fetch failure lands here; keep the last known state.
+    }
+    if (mounted) setState(() => _loading = false);
   }
 
-  Future<void> _run(Future<Order> Function() action) async {
+  LatLng get _mapCenter {
+    final lm = _active?.laundromat;
+    if (lm?.latitude != null && lm?.longitude != null) {
+      return LatLng(lm!.latitude!, lm.longitude!);
+    }
+    if (_profile?.latitude != null && _profile?.longitude != null) {
+      return LatLng(_profile!.latitude!, _profile!.longitude!);
+    }
+    return _fallback;
+  }
+
+  LatLng? get _driverPoint =>
+      (_profile?.latitude != null && _profile?.longitude != null)
+          ? LatLng(_profile!.latitude!, _profile!.longitude!)
+          : null;
+
+  void _error(Object e) {
+    if (!mounted) return;
+    final l10n = AppLocalizations.of(context);
+    showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.driverActiveErrorTitle),
+        content: Text('$e'.replaceFirst('Exception: ', '')),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: Text(l10n.driverActiveErrorOk)),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _run(Future<Order> Function() action,
+      {String? successMessage}) async {
     setState(() => _busy = true);
     try {
-      await action();
+      final updated = await action();
       if (!mounted) return;
-      await _reload();
+      await _load();
+      if (!mounted) return;
+      if (successMessage != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(successMessage),
+            backgroundColor: AppColors.success,
+          ),
+        );
+      }
+      // Defensive: if the order is now terminal, make sure the active view
+      // clears even if the follow-up fetch hiccupped.
+      if (updated.status == OrderStatus.completed) {
+        setState(() => _active = null);
+      }
     } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('$e'.replaceFirst('Exception: ', '')),
-          backgroundColor: AppColors.error,
-        ),
-      );
+      _error(e);
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -50,68 +114,148 @@ class _DriverActiveScreenState extends State<DriverActiveScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Active Delivery')),
-      body: FutureBuilder<Order?>(
-        future: _future,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          if (snapshot.hasError) {
-            return Center(
-              child: Text('${snapshot.error}'.replaceFirst('Exception: ', ''),
-                  style: AppTypography.body),
-            );
-          }
-          final order = snapshot.data;
-          if (order == null) {
-            return RefreshIndicator(
-              onRefresh: _reload,
-              child: ListView(
-                children: [
-                  const SizedBox(height: 120),
-                  Center(
-                      child: Text('No active delivery.',
-                          style: AppTypography.body)),
-                ],
+    final l10n = AppLocalizations.of(context);
+    if (_loading && _active == null) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+
+    if (_active == null) {
+      return Scaffold(
+        appBar: AppBar(title: Text(l10n.driverActiveTitle)),
+        body: RefreshIndicator(
+          onRefresh: _load,
+          child: ListView(
+            children: [
+              const SizedBox(height: 140),
+              Center(
+                child: Text(l10n.driverActiveNoActiveDelivery,
+                    style: AppTypography.body),
               ),
-            );
-          }
-          return RefreshIndicator(
-            onRefresh: _reload,
-            child: ListView(
-              padding: const EdgeInsets.all(AppSpacing.lg),
+            ],
+          ),
+        ),
+      );
+    }
+
+    final order = _active!;
+    return Scaffold(
+      body: Column(
+        children: [
+          // Map fills the top portion of the screen.
+          Expanded(
+            child: Stack(
               children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(order.laundromat?.name ?? 'Laundromat',
-                          style: AppTypography.heading2),
-                    ),
-                    StatusChip(status: order.status),
-                  ],
+                Positioned.fill(
+                  child: TrackingMap(
+                    laundromat: _mapCenter,
+                    driver: _driverPoint,
+                    fill: true,
+                  ),
                 ),
-                Text('Order #${order.id}', style: AppTypography.caption),
-                const SizedBox(height: AppSpacing.lg),
-                _addressCard('Pickup / Return', order.pickupAddress),
-                const SizedBox(height: AppSpacing.md),
-                _addressCard('Deliver to', order.deliveryAddress),
-                const SizedBox(height: AppSpacing.xl),
-                Text('Progress', style: AppTypography.subheading),
-                const SizedBox(height: AppSpacing.md),
-                StatusTimeline(order: order),
-                const SizedBox(height: AppSpacing.xl),
-                _action(order),
+                SafeArea(
+                  child: Align(
+                    alignment: Alignment.topRight,
+                    child: Padding(
+                      padding: const EdgeInsets.all(AppSpacing.md),
+                      child: FloatingActionButton.small(
+                        heroTag: 'driver-active-refresh',
+                        backgroundColor: AppColors.surface,
+                        foregroundColor: AppColors.primary,
+                        onPressed: _load,
+                        child: const Icon(Icons.my_location),
+                      ),
+                    ),
+                  ),
+                ),
               ],
             ),
-          );
-        },
+          ),
+          // Static delivery panel pinned to the bottom.
+          _deliveryPanel(l10n, order),
+        ],
       ),
     );
   }
 
-  Widget _action(Order order) {
+  Widget _deliveryPanel(AppLocalizations l10n, Order order) {
+    return Container(
+      width: double.infinity,
+      decoration: const BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.lg)),
+        boxShadow: [
+          BoxShadow(
+            color: Color(0x22000000),
+            blurRadius: 16,
+            offset: Offset(0, -4),
+          ),
+        ],
+      ),
+      child: SafeArea(
+        top: false,
+        child: Padding(
+          // Extra bottom padding clears the floating bottom nav (72 tall + its
+          // 12 bottom margin) so the action button is never hidden behind it.
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.lg,
+            AppSpacing.lg,
+            AppSpacing.lg,
+            AppSpacing.md + 84,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(l10n.driverActiveCurrentDelivery(order.id),
+                  style: AppTypography.heading2),
+              const SizedBox(height: AppSpacing.lg),
+              DriverStatusBar(status: order.status),
+              const SizedBox(height: AppSpacing.lg),
+              ..._legAddresses(l10n, order),
+              const SizedBox(height: AppSpacing.lg),
+              _action(l10n, order),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // Leg-aware addresses: on the pickup leg the driver goes to the customer and
+  // then the laundromat; on the delivery leg, laundromat -> customer.
+  List<Widget> _legAddresses(AppLocalizations l10n, Order order) {
+    final shop = order.laundromat?.name ?? l10n.driverActiveLaundromatFallback;
+    final isPickupLeg = order.status == OrderStatus.driverAssigned ||
+        order.status == OrderStatus.pickedUp;
+    if (isPickupLeg) {
+      return [
+        _addressRow(Icons.person_pin_circle_outlined,
+            l10n.driverActiveCollectFrom(order.pickupAddress)),
+        const SizedBox(height: AppSpacing.sm),
+        _addressRow(Icons.storefront_outlined, l10n.driverActiveDropAt(shop)),
+      ];
+    }
+    return [
+      _addressRow(
+          Icons.storefront_outlined, l10n.driverActiveCollectFrom(shop)),
+      const SizedBox(height: AppSpacing.sm),
+      _addressRow(Icons.location_on_outlined,
+          l10n.driverActiveDeliverTo(order.deliveryAddress)),
+    ];
+  }
+
+  Widget _addressRow(IconData icon, String text) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(icon, size: 18, color: AppColors.textMuted),
+        const SizedBox(width: AppSpacing.sm),
+        Expanded(child: Text(text, style: AppTypography.body)),
+      ],
+    );
+  }
+
+  Widget _action(AppLocalizations l10n, Order order) {
     if (_busy) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -120,18 +264,31 @@ class _DriverActiveScreenState extends State<DriverActiveScreen> {
         return SizedBox(
           width: double.infinity,
           child: ElevatedButton.icon(
-            onPressed: () => _run(() => _service.markPickedUp(order.id)),
+            onPressed: () => _run(() => _service.markPickedUp(order.id),
+                successMessage: l10n.driverActivePickedUpSuccess),
             icon: const Icon(Icons.inventory_2_outlined),
-            label: const Text('Mark picked up'),
+            label: Text(l10n.driverActiveMarkPickedUp),
+          ),
+        );
+      case OrderStatus.pickedUp:
+        return SizedBox(
+          width: double.infinity,
+          child: ElevatedButton.icon(
+            onPressed: () => _run(
+                () => _service.markArrivedAtLaundromat(order.id),
+                successMessage: l10n.driverActiveArrivedSuccess),
+            icon: const Icon(Icons.storefront_outlined),
+            label: Text(l10n.driverActiveMarkArrived),
           ),
         );
       case OrderStatus.outForDelivery:
         return SizedBox(
           width: double.infinity,
           child: ElevatedButton.icon(
-            onPressed: () => _run(() => _service.markDelivered(order.id)),
+            onPressed: () => _run(() => _service.markDelivered(order.id),
+                successMessage: l10n.driverActiveDeliveredSuccess),
             icon: const Icon(Icons.check_circle_outline),
-            label: const Text('Mark delivered'),
+            label: Text(l10n.driverActiveMarkDelivered),
           ),
         );
       default:
@@ -148,7 +305,8 @@ class _DriverActiveScreenState extends State<DriverActiveScreen> {
               const SizedBox(width: AppSpacing.sm),
               Expanded(
                 child: Text(
-                  'Waiting on the laundromat / customer: ${order.status.label}.',
+                  l10n.driverActiveWaitingOn(
+                      order.status.localizedLabel(l10n)),
                   style: AppTypography.caption,
                 ),
               ),
@@ -156,25 +314,5 @@ class _DriverActiveScreenState extends State<DriverActiveScreen> {
           ),
         );
     }
-  }
-
-  Widget _addressCard(String label, String value) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(AppSpacing.md),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(AppRadius.md),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(label, style: AppTypography.caption),
-          const SizedBox(height: AppSpacing.xs),
-          Text(value, style: AppTypography.body),
-        ],
-      ),
-    );
   }
 }

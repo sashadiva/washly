@@ -45,8 +45,12 @@ class DriverService {
   Future<Order?> active() async {
     try {
       final response = await ApiClient.dio.get('/driver/active');
-      if (response.data == null) return null;
-      return Order.fromJson(response.data as Map<String, dynamic>);
+      final data = response.data;
+      // The backend returns JSON `null` when there's no active order. Dio can
+      // surface that as Dart null OR an empty string depending on headers, so
+      // treat anything that isn't a Map as "no active order".
+      if (data is! Map<String, dynamic>) return null;
+      return Order.fromJson(data);
     } on DioException catch (e) {
       throw Exception(_messageFromDioError(e, 'Failed to load active delivery.'));
     }
@@ -56,6 +60,16 @@ class DriverService {
     try {
       final response =
           await ApiClient.dio.post('/driver/orders/$orderId/picked-up');
+      return Order.fromJson(response.data as Map<String, dynamic>);
+    } on DioException catch (e) {
+      throw Exception(_messageFromDioError(e, 'Failed to update order.'));
+    }
+  }
+
+  Future<Order> markArrivedAtLaundromat(int orderId) async {
+    try {
+      final response =
+          await ApiClient.dio.post('/driver/orders/$orderId/arrived');
       return Order.fromJson(response.data as Map<String, dynamic>);
     } on DioException catch (e) {
       throw Exception(_messageFromDioError(e, 'Failed to update order.'));

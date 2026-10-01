@@ -1,8 +1,34 @@
 import 'package:flutter/material.dart';
+import '../l10n/app_localizations.dart';
 import '../models/laundromat.dart';
 import '../services/laundromat_service.dart';
 import '../theme/app_theme.dart';
 import 'laundromat_detail_screen.dart';
+
+/// Maps a service tag (the stable filter value, e.g. 'Shoes' / 'Dry Clean') to
+/// its localized display label. Falls back to the raw tag for unknown values.
+String serviceTagLabel(AppLocalizations l10n, String tag) {
+  switch (tag.toLowerCase()) {
+    case 'shoes':
+      return l10n.serviceTagShoes;
+    case 'bags':
+      return l10n.serviceTagBags;
+    case 'dolls':
+      return l10n.serviceTagDolls;
+    case 'costumes':
+      return l10n.serviceTagCostumes;
+    case 'express':
+      return l10n.serviceTagExpress;
+    case 'ironing':
+      return l10n.serviceTagIroning;
+    case 'kiloan':
+      return l10n.serviceTagKiloan;
+    case 'dry clean':
+      return l10n.serviceTagDryClean;
+    default:
+      return tag;
+  }
+}
 
 class DiscoveryScreen extends StatefulWidget {
   /// Optional tag to pre-select the filter with (e.g. from a Home shortcut).
@@ -51,6 +77,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
   }
 
   void _showFilterModal() {
+    final l10n = AppLocalizations.of(context);
     final tempSelected = Set<String>.from(_selectedTags);
 
     showModalBottomSheet(
@@ -73,11 +100,11 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text('Filter Services', style: AppTypography.heading2),
+                  Text(l10n.filterServices, style: AppTypography.heading2),
                   TextButton(
                     onPressed: () => setSheetState(() => tempSelected.clear()),
                     child: Text(
-                      'Reset',
+                      l10n.filterReset,
                       style: AppTypography.subheading.copyWith(color: AppColors.primary),
                     ),
                   ),
@@ -91,7 +118,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
                 children: _allTags.map((tag) {
                   final isSelected = tempSelected.contains(tag);
                   return FilterChip(
-                    label: Text(tag),
+                    label: Text(serviceTagLabel(l10n, tag)),
                     selected: isSelected,
                     selectedColor: AppColors.primaryLight,
                     checkmarkColor: AppColors.primary,
@@ -124,7 +151,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
                     });
                     Navigator.pop(ctx);
                   },
-                  child: Text('Apply Filters (${tempSelected.length})'),
+                  child: Text(l10n.filterApplyCount(tempSelected.length)),
                 ),
               ),
               const SizedBox(height: AppSpacing.md),
@@ -137,6 +164,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
       appBar: AppBar(
         title: const Text('Washly', style: AppTypography.heading1),
@@ -163,8 +191,8 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
                     icon: const Icon(Icons.tune, size: 18),
                     label: Text(
                       _selectedTags.isEmpty
-                          ? 'Filter Services'
-                          : 'Services (${_selectedTags.length})',
+                          ? l10n.filterServices
+                          : l10n.filterServicesCount(_selectedTags.length),
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
@@ -178,11 +206,11 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
                       isDense: true,
                       style: AppTypography.subheading,
                       borderRadius: BorderRadius.circular(AppRadius.md),
-                      items: const [
+                      items: [
                         DropdownMenuItem(
-                            value: 'rating', child: Text('Top Rated')),
+                            value: 'rating', child: Text(l10n.sortTopRated)),
                         DropdownMenuItem(
-                            value: 'distance', child: Text('Nearest')),
+                            value: 'distance', child: Text(l10n.sortNearest)),
                       ],
                       onChanged: (val) {
                         if (val == null) return;
@@ -204,13 +232,15 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
                 }
                 if (snapshot.hasError) {
                   return Center(
-                    child: Text('Error: ${snapshot.error}', style: AppTypography.body),
+                    child: Text(l10n.discoveryError('${snapshot.error}'),
+                        style: AppTypography.body),
                   );
                 }
                 final stores = snapshot.data ?? [];
                 if (stores.isEmpty) {
-                  return const Center(
-                    child: Text('No laundromats found.', style: AppTypography.body),
+                  return Center(
+                    child: Text(l10n.discoveryNoLaundromats,
+                        style: AppTypography.body),
                   );
                 }
 
@@ -239,6 +269,7 @@ class LaundromatListingCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Container(
       margin: margin ??
           const EdgeInsets.symmetric(
@@ -296,9 +327,10 @@ class LaundromatListingCard extends StatelessWidget {
                         store.rating.toStringAsFixed(1),
                         style: AppTypography.subheading,
                       ),
-                      Text(' (${store.reviewCount})', style: AppTypography.caption),
+                      Text(l10n.discoveryReviewCount(store.reviewCount),
+                          style: AppTypography.caption),
                       if (store.distanceKm != null) ...[
-                        Text(
+                        const Text(
                           '  •  ',
                           style: TextStyle(
                             color: AppColors.border,
@@ -306,7 +338,7 @@ class LaundromatListingCard extends StatelessWidget {
                           ),
                         ),
                         Text(
-                          '${store.distanceKm} km',
+                          l10n.discoveryDistanceKm('${store.distanceKm}'),
                           style: AppTypography.caption.copyWith(color: AppColors.textSecondary),
                         ),
                       ],
@@ -314,7 +346,7 @@ class LaundromatListingCard extends StatelessWidget {
                   ),
                   const SizedBox(height: AppSpacing.xs),
                   Text(
-                    store.areaLabel ?? 'Area shown after order',
+                    store.areaLabel ?? l10n.discoveryAreaHidden,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: AppTypography.body,
@@ -323,7 +355,9 @@ class LaundromatListingCard extends StatelessWidget {
                   Wrap(
                     spacing: AppSpacing.xs,
                     runSpacing: AppSpacing.xs,
-                    children: store.tags.map((tag) => _buildTagPill(tag)).toList(),
+                    children: store.tags
+                        .map((tag) => _buildTagPill(serviceTagLabel(l10n, tag)))
+                        .toList(),
                   ),
                 ],
               ),

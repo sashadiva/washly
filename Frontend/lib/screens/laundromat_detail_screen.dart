@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../core/auth_store.dart';
 import '../core/cart_store.dart';
+import '../l10n/app_localizations.dart';
 import '../models/cart_item.dart';
 import '../models/laundry_service_item.dart';
 import '../models/laundromat_detail.dart';
@@ -45,9 +46,13 @@ class _LaundromatDetailScreenState extends State<LaundromatDetailScreen>
   }
 
   void _showAddItemModal(LaundromatDetail store, LaundryServiceItem item) {
+    final l10n = AppLocalizations.of(context);
     final cart = context.read<CartStore>();
     final existing = cart.itemFor(item.id);
-    int quantity = existing?.quantity ?? (item.isKilo ? 3 : 1);
+    // Per-kg: the customer no longer picks a weight. Quantity is a fixed
+    // placeholder (1); the real weight/price is set by the laundromat at
+    // weigh-in. Per-item: the stepper below drives the quantity.
+    int quantity = item.isKilo ? 1 : (existing?.quantity ?? 1);
     final notesCtrl = TextEditingController(text: existing?.notes ?? '');
 
     showModalBottomSheet(
@@ -91,7 +96,9 @@ class _LaundromatDetailScreenState extends State<LaundromatDetailScreen>
                           Text(item.name, style: AppTypography.heading2),
                           const SizedBox(height: AppSpacing.xs),
                           Text(
-                            'Rp ${item.price.toStringAsFixed(0)} / ${item.isKilo ? 'kg' : 'item'}',
+                            l10n.detailPricePerUnit(
+                                item.price.toStringAsFixed(0),
+                                item.isKilo ? l10n.detailUnitKg : l10n.detailUnitItem),
                             style: AppTypography.price.copyWith(color: AppColors.primary),
                           ),
                         ],
@@ -101,52 +108,76 @@ class _LaundromatDetailScreenState extends State<LaundromatDetailScreen>
                 ),
                 const Divider(height: AppSpacing.xxl, color: AppColors.border),
 
-                Text(
-                  item.isKilo ? 'Select Weight in Kilograms (Min. 1 kg)' : 'Quantity of Items',
-                  style: AppTypography.subheading,
-                ),
-                const SizedBox(height: AppSpacing.md),
-
-                Center(
-                  child: Container(
+                if (item.isKilo)
+                  // Per-kg: no weight input. The laundromat weighs the laundry
+                  // and sends the price for the customer to approve before paying.
+                  Container(
+                    padding: const EdgeInsets.all(AppSpacing.md),
                     decoration: BoxDecoration(
-                      color: AppColors.surfaceMuted,
-                      borderRadius: BorderRadius.circular(AppRadius.lg),
-                    ),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppSpacing.md,
-                      vertical: AppSpacing.xs,
+                      color: AppColors.primaryLight,
+                      borderRadius: BorderRadius.circular(AppRadius.md),
                     ),
                     child: Row(
-                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        IconButton(
-                          icon: const Icon(Icons.remove, size: 20),
-                          onPressed: quantity > 1 ? () => setSheetState(() => quantity--) : null,
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+                        const Icon(Icons.scale_outlined,
+                            size: 18, color: AppColors.primary),
+                        const SizedBox(width: AppSpacing.sm),
+                        Expanded(
                           child: Text(
-                            '$quantity ${item.isKilo ? 'kg' : 'pcs'}',
-                            style: AppTypography.heading2,
+                            l10n.detailPerKgNote(item.price.toStringAsFixed(0)),
+                            style: AppTypography.caption,
                           ),
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.add, size: 20, color: AppColors.primary),
-                          onPressed: () => setSheetState(() => quantity++),
                         ),
                       ],
                     ),
+                  )
+                else ...[
+                  Text(l10n.detailQuantityOfItems, style: AppTypography.subheading),
+                  const SizedBox(height: AppSpacing.md),
+                  Center(
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: AppColors.surfaceMuted,
+                        borderRadius: BorderRadius.circular(AppRadius.lg),
+                      ),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.md,
+                        vertical: AppSpacing.xs,
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          IconButton(
+                            icon: const Icon(Icons.remove, size: 20),
+                            onPressed: quantity > 1
+                                ? () => setSheetState(() => quantity--)
+                                : null,
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: AppSpacing.lg),
+                            child: Text(l10n.detailPieces(quantity),
+                                style: AppTypography.heading2),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.add,
+                                size: 20, color: AppColors.primary),
+                            onPressed: () => setSheetState(() => quantity++),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
-                ),
+                ],
 
                 const SizedBox(height: AppSpacing.lg),
                 TextField(
                   controller: notesCtrl,
                   decoration: InputDecoration(
                     labelText: item.isKilo
-                        ? 'Washing Instructions (Optional)'
-                        : 'Item Details (e.g. 2 Nike Dunks, 1 Coach bag)',
+                        ? l10n.detailWashingInstructions
+                        : l10n.detailItemDetailsHint,
                   ),
                 ),
                 const SizedBox(height: AppSpacing.xl),
@@ -171,7 +202,10 @@ class _LaundromatDetailScreenState extends State<LaundromatDetailScreen>
                       );
                       if (ctx.mounted) Navigator.pop(ctx);
                     },
-                    child: Text('Add to Basket • Rp ${(item.price * quantity).toStringAsFixed(0)}'),
+                    child: Text(item.isKilo
+                        ? l10n.detailAddToBasket
+                        : l10n.detailAddToBasketPrice(
+                            (item.price * quantity).toStringAsFixed(0))),
                   ),
                 ),
               ],
@@ -185,25 +219,28 @@ class _LaundromatDetailScreenState extends State<LaundromatDetailScreen>
   /// If the cart holds items from another laundromat, ask to clear it first.
   /// Returns true if it's safe to proceed adding for [store].
   Future<bool> _ensureCartScope(LaundromatDetail store) async {
+    final l10n = AppLocalizations.of(context);
     final cart = context.read<CartStore>();
     if (!cart.wouldReplace(store.id)) return true;
 
     final replace = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Start a new basket?'),
+        title: Text(l10n.detailNewBasketTitle),
         content: Text(
-          'Your basket has items from ${cart.laundromatName ?? 'another laundromat'}. '
-          'Adding this will clear it and start a new basket at ${store.name}.',
+          l10n.detailNewBasketBody(
+            cart.laundromatName ?? l10n.detailAnotherLaundromat,
+            store.name,
+          ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Cancel'),
+            child: Text(l10n.commonCancel),
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Clear & add'),
+            child: Text(l10n.detailClearAndAdd),
           ),
         ],
       ),
@@ -216,6 +253,7 @@ class _LaundromatDetailScreenState extends State<LaundromatDetailScreen>
   }
 
   void _showAddReviewDialog(int storeId) {
+    final l10n = AppLocalizations.of(context);
     int selectedRating = 5;
     final commentCtrl = TextEditingController();
 
@@ -224,7 +262,7 @@ class _LaundromatDetailScreenState extends State<LaundromatDetailScreen>
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setDlgState) => AlertDialog(
           backgroundColor: AppColors.surface,
-          title: const Text('Write a Review', style: AppTypography.heading2),
+          title: Text(l10n.detailWriteReview, style: AppTypography.heading2),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -242,7 +280,7 @@ class _LaundromatDetailScreenState extends State<LaundromatDetailScreen>
               ),
               TextField(
                 controller: commentCtrl,
-                decoration: const InputDecoration(labelText: 'Your review'),
+                decoration: InputDecoration(labelText: l10n.detailYourReview),
                 maxLines: 3,
               ),
             ],
@@ -250,7 +288,8 @@ class _LaundromatDetailScreenState extends State<LaundromatDetailScreen>
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(ctx),
-              child: Text('Cancel', style: TextStyle(color: AppColors.textSecondary)),
+              child: Text(l10n.commonCancel,
+                  style: const TextStyle(color: AppColors.textSecondary)),
             ),
             ElevatedButton(
               onPressed: () async {
@@ -258,7 +297,7 @@ class _LaundromatDetailScreenState extends State<LaundromatDetailScreen>
                 final messenger = ScaffoldMessenger.of(context);
                 if (userId == null) {
                   messenger.showSnackBar(
-                    const SnackBar(content: Text('Please sign in to review.')),
+                    SnackBar(content: Text(l10n.detailSignInToReview)),
                   );
                   return;
                 }
@@ -273,11 +312,11 @@ class _LaundromatDetailScreenState extends State<LaundromatDetailScreen>
                   _refresh();
                 } catch (e) {
                   messenger.showSnackBar(
-                    SnackBar(content: Text('Failed: $e')),
+                    SnackBar(content: Text(l10n.detailReviewFailed('$e'))),
                   );
                 }
               },
-              child: const Text('Post'),
+              child: Text(l10n.commonPost),
             ),
           ],
         ),
@@ -287,6 +326,7 @@ class _LaundromatDetailScreenState extends State<LaundromatDetailScreen>
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return FutureBuilder<LaundromatDetail>(
       future: _detailFuture,
       builder: (context, snapshot) {
@@ -294,7 +334,9 @@ class _LaundromatDetailScreenState extends State<LaundromatDetailScreen>
           return const Scaffold(body: Center(child: CircularProgressIndicator()));
         }
         if (snapshot.hasError || !snapshot.hasData) {
-          return Scaffold(appBar: AppBar(), body: Center(child: Text('Error: ${snapshot.error}')));
+          return Scaffold(
+              appBar: AppBar(),
+              body: Center(child: Text(l10n.discoveryError('${snapshot.error}'))));
         }
 
         final store = snapshot.data!;
@@ -334,11 +376,12 @@ class _LaundromatDetailScreenState extends State<LaundromatDetailScreen>
                               store.rating.toStringAsFixed(1),
                               style: AppTypography.subheading,
                             ),
-                            Text(' (${store.reviewCount} reviews)', style: AppTypography.caption),
+                            Text(l10n.detailReviewCountSuffix(store.reviewCount),
+                                style: AppTypography.caption),
                           ],
                         ),
                         const SizedBox(height: AppSpacing.xs),
-                        Text(store.areaLabel ?? 'Area hidden until pickup',
+                        Text(store.areaLabel ?? l10n.detailAreaHidden,
                             style: AppTypography.body),
                       ],
                     ),
@@ -355,8 +398,8 @@ class _LaundromatDetailScreenState extends State<LaundromatDetailScreen>
                       indicatorWeight: 3,
                       labelStyle: AppTypography.subheading,
                       tabs: [
-                        const Tab(text: 'Services Menu'),
-                        Tab(text: 'Reviews (${store.reviews.length})'),
+                        Tab(text: l10n.detailServicesMenu),
+                        Tab(text: l10n.detailReviewsCount(store.reviews.length)),
                       ],
                     ),
                   ),
@@ -368,7 +411,7 @@ class _LaundromatDetailScreenState extends State<LaundromatDetailScreen>
               children: [
                 // TAB 1: Database Dynamic Services Menu
                 store.services.isEmpty
-                    ? const Center(child: Text('No services listed yet.'))
+                    ? Center(child: Text(l10n.detailNoServices))
                     : ListView.separated(
                         padding: const EdgeInsets.only(top: AppSpacing.sm, bottom: 90),
                         itemCount: store.services.length,
@@ -421,7 +464,11 @@ class _LaundromatDetailScreenState extends State<LaundromatDetailScreen>
                                       ],
                                       const SizedBox(height: AppSpacing.xs),
                                       Text(
-                                        'Rp ${item.price.toStringAsFixed(0)} / ${item.isKilo ? 'kg' : 'item'}',
+                                        l10n.detailPricePerUnit(
+                                            item.price.toStringAsFixed(0),
+                                            item.isKilo
+                                                ? l10n.detailUnitKg
+                                                : l10n.detailUnitItem),
                                         style: AppTypography.price,
                                       ),
                                     ],
@@ -449,44 +496,104 @@ class _LaundromatDetailScreenState extends State<LaundromatDetailScreen>
                                           child: const Icon(Icons.add, color: Colors.white, size: 22),
                                         ),
                                       )
-                                    : Container(
-                                        decoration: BoxDecoration(
-                                          color: AppColors.surfaceMuted,
-                                          borderRadius: BorderRadius.circular(AppRadius.pill),
-                                        ),
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: AppSpacing.xs,
-                                          vertical: 2,
-                                        ),
-                                        child: Row(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            InkWell(
-                                              onTap: () =>
-                                                  cart.decrement(item.id),
-                                              child: const Padding(
-                                                padding: EdgeInsets.all(AppSpacing.xs),
-                                                child: Icon(Icons.remove, size: 18, color: AppColors.error),
+                                    : item.isKilo
+                                        // Per-kg: no quantity to adjust. Show an
+                                        // "in basket" pill that removes on tap.
+                                        ? InkWell(
+                                            onTap: () => cart.decrement(item.id),
+                                            borderRadius: BorderRadius.circular(
+                                                AppRadius.pill),
+                                            child: Container(
+                                              decoration: BoxDecoration(
+                                                color: AppColors.primaryLight,
+                                                borderRadius:
+                                                    BorderRadius.circular(
+                                                        AppRadius.pill),
+                                              ),
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                horizontal: AppSpacing.sm,
+                                                vertical: 6,
+                                              ),
+                                              child: Row(
+                                                mainAxisSize: MainAxisSize.min,
+                                                children: [
+                                                  const Icon(Icons.check,
+                                                      size: 16,
+                                                      color:
+                                                          AppColors.primary),
+                                                  const SizedBox(
+                                                      width: AppSpacing.xs),
+                                                  Text(l10n.detailInBasket,
+                                                      style: const TextStyle(
+                                                        fontSize: 12,
+                                                        fontWeight:
+                                                            FontWeight.bold,
+                                                        color:
+                                                            AppColors.primary,
+                                                      )),
+                                                  const SizedBox(
+                                                      width: AppSpacing.xs),
+                                                  const Icon(Icons.close,
+                                                      size: 14,
+                                                      color:
+                                                          AppColors.textMuted),
+                                                ],
                                               ),
                                             ),
-                                            Padding(
-                                              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
-                                              child: Text(
-                                                '${inCart.quantity}',
-                                                style: AppTypography.subheading,
-                                              ),
+                                          )
+                                        : Container(
+                                            decoration: BoxDecoration(
+                                              color: AppColors.surfaceMuted,
+                                              borderRadius:
+                                                  BorderRadius.circular(
+                                                      AppRadius.pill),
                                             ),
-                                            InkWell(
-                                              onTap: () =>
-                                                  cart.increment(item.id),
-                                              child: const Padding(
-                                                padding: EdgeInsets.all(AppSpacing.xs),
-                                                child: Icon(Icons.add, size: 18, color: AppColors.primary),
-                                              ),
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: AppSpacing.xs,
+                                              vertical: 2,
                                             ),
-                                          ],
-                                        ),
-                                      ),
+                                            child: Row(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                InkWell(
+                                                  onTap: () =>
+                                                      cart.decrement(item.id),
+                                                  child: const Padding(
+                                                    padding: EdgeInsets.all(
+                                                        AppSpacing.xs),
+                                                    child: Icon(Icons.remove,
+                                                        size: 18,
+                                                        color:
+                                                            AppColors.error),
+                                                  ),
+                                                ),
+                                                Padding(
+                                                  padding:
+                                                      const EdgeInsets.symmetric(
+                                                          horizontal:
+                                                              AppSpacing.sm),
+                                                  child: Text(
+                                                    '${inCart.quantity}',
+                                                    style:
+                                                        AppTypography.subheading,
+                                                  ),
+                                                ),
+                                                InkWell(
+                                                  onTap: () =>
+                                                      cart.increment(item.id),
+                                                  child: const Padding(
+                                                    padding: EdgeInsets.all(
+                                                        AppSpacing.xs),
+                                                    child: Icon(Icons.add,
+                                                        size: 18,
+                                                        color:
+                                                            AppColors.primary),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
                               ],
                             ),
                           );
@@ -504,13 +611,14 @@ class _LaundromatDetailScreenState extends State<LaundromatDetailScreen>
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text('${store.reviews.length} Customer Reviews', style: AppTypography.heading2),
+                          Text(l10n.detailCustomerReviews(store.reviews.length),
+                              style: AppTypography.heading2),
                           TextButton.icon(
                             onPressed: () => _showAddReviewDialog(store.id),
                             icon: const Icon(Icons.rate_review, size: 18, color: AppColors.primary),
-                            label: const Text(
-                              'Add Review',
-                              style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold),
+                            label: Text(
+                              l10n.detailAddReview,
+                              style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold),
                             ),
                           ),
                         ],
@@ -521,7 +629,7 @@ class _LaundromatDetailScreenState extends State<LaundromatDetailScreen>
                       child: store.reviews.isEmpty
                           ? Center(
                               child: Text(
-                                'No reviews yet. Be the first to leave one!',
+                                l10n.detailNoReviews,
                                 style: AppTypography.body,
                               ),
                             )
@@ -614,9 +722,15 @@ class _LaundromatDetailScreenState extends State<LaundromatDetailScreen>
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text('$totalCartCount items in basket', style: AppTypography.subheading.copyWith(color: Colors.white)),
+                        Text(l10n.detailItemsInBasket(totalCartCount),
+                            style: AppTypography.subheading.copyWith(color: Colors.white)),
                         Text(
-                          'Rp ${totalCartPrice.toStringAsFixed(0)}  ➔',
+                          // Per-kg price is only known after weighing, so don't
+                          // show a committed rupiah total when the basket has one.
+                          cart.hasKilo
+                              ? l10n.detailWeighedAtPickupArrow
+                              : l10n.detailBasketTotalArrow(
+                                  totalCartPrice.toStringAsFixed(0)),
                           style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                         ),
                       ],

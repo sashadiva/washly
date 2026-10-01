@@ -25,6 +25,9 @@ class CartStore extends ChangeNotifier {
   double get subtotal =>
       _items.values.fold(0.0, (sum, item) => sum + item.totalPrice);
 
+  /// True if any line is priced by weight (final price set at the laundromat).
+  bool get hasKilo => _items.values.any((item) => item.isKilo);
+
   CartItem? itemFor(int serviceId) => _items[serviceId];
 
   /// True if adding for [laundromatId] would replace items from another store.

@@ -4,6 +4,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import '../../core/auth_store.dart';
 import '../../core/profile_photo_store.dart';
+import '../../l10n/app_localizations.dart';
 import '../../services/auth_service.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/profile_avatar.dart';
@@ -53,17 +54,26 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   }
 
   Future<void> _pickPhoto() async {
-    final file = await _picker.pickImage(
-      source: ImageSource.gallery,
-      maxWidth: 800,
-      imageQuality: 75,
-    );
-    if (file == null) return;
-    final bytes = await file.readAsBytes();
-    final dataUri = 'data:image/jpeg;base64,${base64Encode(bytes)}';
-    if (!mounted) return;
-    await context.read<ProfilePhotoStore>().setPhoto(dataUri);
-    if (mounted) _toast('Photo updated.');
+    try {
+      final file = await _picker.pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 800,
+        imageQuality: 75,
+      );
+      if (file == null) return; // user cancelled
+      final bytes = await file.readAsBytes();
+      final dataUri = 'data:image/jpeg;base64,${base64Encode(bytes)}';
+      if (!mounted) return;
+      await context.read<ProfilePhotoStore>().setPhoto(dataUri);
+      if (mounted) _toast(AppLocalizations.of(context).editProfilePhotoUpdated);
+    } catch (e) {
+      if (mounted) {
+        _toast(
+            AppLocalizations.of(context).editProfilePickerError(
+                '$e'.replaceFirst('Exception: ', '')),
+            error: true);
+      }
+    }
   }
 
   Future<void> _save() async {
@@ -77,7 +87,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       if (!mounted) return;
       await context.read<AuthStore>().updateUser(updated);
       if (!mounted) return;
-      _toast('Profile updated.');
+      _toast(AppLocalizations.of(context).editProfileUpdated);
       Navigator.pop(context);
     } catch (e) {
       if (!mounted) return;
@@ -91,9 +101,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   Widget build(BuildContext context) {
     final name = context.watch<AuthStore>().currentUser?.name ?? '';
     final photo = context.watch<ProfilePhotoStore>().dataUri;
+    final l10n = AppLocalizations.of(context);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Edit Profile')),
+      appBar: AppBar(title: Text(l10n.editProfileTitle)),
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.all(AppSpacing.xl),
@@ -129,7 +140,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   const SizedBox(height: AppSpacing.sm),
                   TextButton(
                     onPressed: _pickPhoto,
-                    child: const Text('Change photo'),
+                    child: Text(l10n.editProfileChangePhoto),
                   ),
                 ],
               ),
@@ -143,18 +154,20 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 children: [
                   TextFormField(
                     controller: _name,
-                    decoration: const InputDecoration(labelText: 'Name'),
+                    decoration:
+                        InputDecoration(labelText: l10n.editProfileNameLabel),
                     validator: (v) => (v == null || v.trim().isEmpty)
-                        ? 'Name is required'
+                        ? l10n.editProfileNameRequired
                         : null,
                   ),
                   const SizedBox(height: AppSpacing.lg),
                   TextFormField(
                     controller: _phone,
                     keyboardType: TextInputType.phone,
-                    decoration: const InputDecoration(labelText: 'Phone'),
+                    decoration:
+                        InputDecoration(labelText: l10n.commonPhoneLabel),
                     validator: (v) => (v == null || v.trim().isEmpty)
-                        ? 'Phone is required'
+                        ? l10n.editProfilePhoneRequired
                         : null,
                   ),
                   const SizedBox(height: AppSpacing.xl),
@@ -167,7 +180,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                             child: CircularProgressIndicator(
                                 color: Colors.white, strokeWidth: 2),
                           )
-                        : const Text('Save profile'),
+                        : Text(l10n.editProfileSave),
                   ),
                 ],
               ),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/locale_store.dart';
+import '../../l10n/app_localizations.dart';
 import '../../theme/app_theme.dart';
 
 /// Dedicated Change Language page: English / Indonesian radio options (radio on
@@ -25,8 +26,8 @@ class _ChangeLanguageScreenState extends State<ChangeLanguageScreen> {
     await context.read<LocaleStore>().setLocale(Locale(_selected));
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Language updated.'),
+      SnackBar(
+        content: Text(AppLocalizations.of(context).changeLanguageSaved),
         backgroundColor: AppColors.success,
       ),
     );
@@ -35,8 +36,9 @@ class _ChangeLanguageScreenState extends State<ChangeLanguageScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
-      appBar: AppBar(title: const Text('Change Language')),
+      appBar: AppBar(title: Text(l10n.changeLanguageTitle)),
       body: SafeArea(
         child: Column(
           children: [
@@ -47,8 +49,11 @@ class _ChangeLanguageScreenState extends State<ChangeLanguageScreen> {
                 child: ListView(
                   padding: const EdgeInsets.all(AppSpacing.lg),
                   children: LocaleStore.supported.map((entry) {
-                    final (locale, label) = entry;
+                    final (locale, _) = entry;
                     final code = locale.languageCode;
+                    final label = code == 'id'
+                        ? l10n.languageIndonesian
+                        : l10n.languageEnglish;
                     final selected = code == _selected;
                     return Container(
                       margin: const EdgeInsets.only(bottom: AppSpacing.md),
@@ -96,7 +101,7 @@ class _ChangeLanguageScreenState extends State<ChangeLanguageScreen> {
                   width: double.infinity,
                   child: ElevatedButton(
                     onPressed: _confirm,
-                    child: const Text('Confirm'),
+                    child: Text(l10n.commonConfirm),
                   ),
                 ),
               ),

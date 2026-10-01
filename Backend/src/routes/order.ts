@@ -6,6 +6,7 @@ import { roleGuard } from '../middleware/roleGuard.js';
 import { getDistanceKm } from '../services/distanceService.js';
 import { feeFor } from '../services/deliveryFeeService.js';
 import { nextStatus, IllegalTransitionError } from '../services/orderStateMachine.js';
+import { DECLARED_ITEMS_FEE } from '../services/pricing.js';
 
 const router = Router();
 
@@ -54,6 +55,15 @@ const ORDER_INCLUDE = {
   appliedVoucher: true,
   laundromat: {
     select: { id: true, name: true, areaLabel: true, imageUrl: true },
+  },
+  // Assigned driver's vehicle (+ contact) so the customer can identify who is
+  // picking up / delivering. Null until a driver accepts a leg.
+  driver: {
+    select: {
+      vehicleType: true,
+      plateNumber: true,
+      user: { select: { name: true, phone: true } },
+    },
   },
 } satisfies Prisma.OrderInclude;
 
@@ -152,15 +162,6 @@ router.post('/', async (req: Request<{}, {}, CreateOrderBody>, res: Response) =>
       appliedVoucherId = voucher.id;
     }
 
-    // Per-item: subtotal + final total known now (fee + subtotal - voucher,
-    // floored at 0). Per-kg: subtotal/final left null until weigh-in.
-    let itemsSubtotal: number | null = null;
-    let finalTotal: number | null = null;
-    if (pricingModel === PricingUnit.PER_ITEM) {
-      itemsSubtotal = orderItemsData.reduce((sum, i) => sum + (i.lineTotal ?? 0), 0);
-      finalTotal = Math.max(0, itemsSubtotal + deliveryFee - voucherDiscount);
-    }
-
     // Declared items for the warranty window (photos captured at checkout).
     const declaredItemsData: Prisma.DeclaredItemCreateWithoutOrderInput[] = Array.isArray(
       declaredItems
@@ -169,6 +170,21 @@ router.post('/', async (req: Request<{}, {}, CreateOrderBody>, res: Response) =>
           .filter((d) => d && typeof d.label === 'string' && typeof d.photoUrl === 'string')
           .map((d) => ({ label: d.label.trim(), photoUrl: d.photoUrl }))
       : [];
+
+    // Flat one-time protection fee when the order carries declared items.
+    const declaredItemsFee = declaredItemsData.length > 0 ? DECLARED_ITEMS_FEE : 0;
+
+    // Per-item: subtotal + final total known now (subtotal + fees - voucher,
+    // floored at 0). Per-kg: subtotal/final left null until weigh-in.
+    let itemsSubtotal: number | null = null;
+    let finalTotal: number | null = null;
+    if (pricingModel === PricingUnit.PER_ITEM) {
+      itemsSubtotal = orderItemsData.reduce((sum, i) => sum + (i.lineTotal ?? 0), 0);
+      finalTotal = Math.max(
+        0,
+        itemsSubtotal + deliveryFee + declaredItemsFee - voucherDiscount
+      );
+    }
 
     const order = await prisma.$transaction(async (tx) => {
       const created = await tx.order.create({
@@ -185,6 +201,7 @@ router.post('/', async (req: Request<{}, {}, CreateOrderBody>, res: Response) =>
           customerLng: lng,
           distanceKm,
           deliveryFee,
+          declaredItemsFee,
           itemsSubtotal,
           finalTotal,
           voucherDiscount,

@@ -41,6 +41,9 @@ dependencies:
   provider: ^6.1.5+1
   image_picker: ^1.1.2
   url_launcher: ^6.3.1
+  flutter_map: ^7.0.2
+  latlong2: ^0.9.1
+  intl: any
 
 dev_dependencies:
   flutter_test:
@@ -58,6 +61,10 @@ dev_dependencies:
 
 # The following section is specific to Flutter packages.
 flutter:
+
+  # Generate the typed AppLocalizations class from the ARB files in lib/l10n
+  # (configured via l10n.yaml). Enables Indonesian/English translations.
+  generate: true
 
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in

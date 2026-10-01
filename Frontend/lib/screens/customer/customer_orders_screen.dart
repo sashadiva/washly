@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../l10n/app_localizations.dart';
 import '../../models/order.dart';
 import '../../services/order_service.dart';
 import '../../theme/app_theme.dart';
@@ -25,7 +26,11 @@ class _CustomerOrdersScreenState extends State<CustomerOrdersScreen> {
   }
 
   Future<void> _reload() async {
-    setState(() => _future = _service.myOrders());
+    // Block body so the closure returns void — a fat-arrow here would return
+    // the Future, which setState rejects.
+    setState(() {
+      _future = _service.myOrders();
+    });
     await _future;
   }
 
@@ -40,13 +45,14 @@ class _CustomerOrdersScreenState extends State<CustomerOrdersScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return DefaultTabController(
       length: 2,
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('My Orders'),
-          bottom: const TabBar(
-            tabs: [Tab(text: 'Active'), Tab(text: 'History')],
+          title: Text(l10n.ordersTitle),
+          bottom: TabBar(
+            tabs: [Tab(text: l10n.navActive), Tab(text: l10n.navHistory)],
           ),
         ),
         body: FutureBuilder<List<Order>>(
@@ -69,13 +75,13 @@ class _CustomerOrdersScreenState extends State<CustomerOrdersScreen> {
               children: [
                 _OrderList(
                   orders: active,
-                  emptyText: 'No active orders. Place one from Discovery.',
+                  emptyText: l10n.ordersEmptyActive,
                   onTap: _openOrder,
                   onRefresh: _reload,
                 ),
                 _OrderList(
                   orders: history,
-                  emptyText: 'No past orders yet.',
+                  emptyText: l10n.ordersEmptyHistory,
                   onTap: _openOrder,
                   onRefresh: _reload,
                 ),
@@ -118,7 +124,8 @@ class _OrderList extends StatelessWidget {
     return RefreshIndicator(
       onRefresh: onRefresh,
       child: ListView.builder(
-        padding: const EdgeInsets.all(AppSpacing.lg),
+        padding: const EdgeInsets.fromLTRB(
+            AppSpacing.lg, AppSpacing.lg, AppSpacing.lg, 100),
         itemCount: orders.length,
         itemBuilder: (context, i) {
           final order = orders[i];
@@ -136,6 +143,7 @@ class _OrderCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final total = order.finalTotal;
     final itemCount = order.items.length;
     return Card(
@@ -158,7 +166,7 @@ class _OrderCard extends StatelessWidget {
                 children: [
                   Expanded(
                     child: Text(
-                      order.laundromat?.name ?? 'Laundromat',
+                      order.laundromat?.name ?? l10n.ordersLaundromatFallback,
                       style: AppTypography.heading2,
                     ),
                   ),
@@ -167,8 +175,8 @@ class _OrderCard extends StatelessWidget {
               ),
               const SizedBox(height: AppSpacing.xs),
               Text(
-                '#${order.id} · $itemCount item${itemCount == 1 ? '' : 's'}'
-                '${order.isKilo ? ' · per kg' : ''}',
+                '${l10n.orderNumber(order.id)} · ${l10n.ordersItemCount(itemCount)}'
+                '${order.isKilo ? ' · ${l10n.ordersPerKgSuffix}' : ''}',
                 style: AppTypography.caption,
               ),
               const SizedBox(height: AppSpacing.sm),
@@ -176,15 +184,16 @@ class _OrderCard extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   if (order.needsWeightApproval)
-                    Text('Action needed: confirm price',
+                    Text(l10n.ordersActionConfirmPrice,
                         style: AppTypography.caption
                             .copyWith(color: AppColors.primaryDark))
                   else
-                    Text(order.status.label, style: AppTypography.caption),
+                    Text(order.status.localizedLabel(l10n),
+                        style: AppTypography.caption),
                   Text(
                     total != null
-                        ? 'Rp ${total.toStringAsFixed(0)}'
-                        : (order.isKilo ? 'Weighed at pickup' : '—'),
+                        ? l10n.moneyRp(total.toStringAsFixed(0))
+                        : (order.isKilo ? l10n.ordersWeighedAtPickup : '—'),
                     style: AppTypography.price,
                   ),
                 ],
@@ -215,7 +224,8 @@ class _ErrorState extends StatelessWidget {
             Text(message, textAlign: TextAlign.center, style: AppTypography.body),
             const SizedBox(height: AppSpacing.lg),
             OutlinedButton(
-                onPressed: () => onRetry(), child: const Text('Retry')),
+                onPressed: () => onRetry(),
+                child: Text(AppLocalizations.of(context).commonRetry)),
           ],
         ),
       ),
