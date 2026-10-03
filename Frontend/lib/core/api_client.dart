@@ -54,7 +54,19 @@ class ApiClient {
     );
   }
 
+  // A deploy-time override, e.g.
+  //   flutter build web --dart-define=API_BASE_URL=https://api.example.com/api
+  // When set, it is used on every platform. When empty, we fall back to the
+  // local-dev defaults below.
+  static const String _apiBaseUrlOverride =
+      String.fromEnvironment('API_BASE_URL');
+
   static String _getBaseUrl() {
+    // Production / deployed builds pass the public API URL at build time.
+    if (_apiBaseUrlOverride.isNotEmpty) {
+      return _apiBaseUrlOverride;
+    }
+
     // On web, dart:io's Platform is unavailable (it throws
     // "Unsupported operation: Platform._operatingSystem"), so check kIsWeb
     // first. The browser reaches the backend directly on localhost.

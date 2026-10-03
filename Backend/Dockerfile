@@ -21,6 +21,8 @@ RUN DATABASE_URL="postgresql://build:build@localhost:5432/build" npx prisma gene
 
 EXPOSE 5000
 
-# Hot-reloading dev server. Source is bind-mounted in docker-compose so edits
-# on the host are picked up live.
-CMD ["npm", "run", "dev"]
+# Default command. In local docker-compose this is overridden with the dev
+# server + seed (see docker-compose.yml). On a host like Railway (which uses
+# this image directly), run migrations then start the server — no seeding, so
+# deployed data is never wiped. Seed once manually after the first deploy.
+CMD ["npm", "run", "start:prod"]

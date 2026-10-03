@@ -28,8 +28,9 @@ app.use('/api/driver', driverRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/loyalty', loyaltyRoutes);
 
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
+const PORT = Number(process.env.PORT) || 5000;
+// Bind to 0.0.0.0 so the container is reachable on hosts like Railway.
+app.listen(PORT, '0.0.0.0', () => {
   console.log(`Server running on port ${PORT}`);
 });
 

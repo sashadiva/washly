@@ -8,6 +8,7 @@
     "dev": "tsx watch src/app.ts",
     "build": "tsc",
     "start": "node dist/src/app.js",
+    "start:prod": "prisma migrate deploy && tsx src/app.ts",
     "seed": "tsx prisma/seed.ts",
     "test": "tsx --test src/**/*.test.ts"
   },
