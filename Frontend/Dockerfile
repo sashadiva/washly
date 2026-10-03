@@ -11,8 +11,9 @@ RUN flutter pub get
 
 COPY . .
 
-# The backend API base URL, e.g. https://washly-backend.up.railway.app/api
-ARG API_BASE_URL=""
+# The backend API base URL, baked into the web build. Defaults to the deployed
+# Railway backend; override with --build-arg API_BASE_URL=... if it changes.
+ARG API_BASE_URL="https://washly-be-prototype.up.railway.app/api"
 RUN flutter build web --release --dart-define=API_BASE_URL=$API_BASE_URL
 
 # Stage 2: serve the static build with a tiny Node static server that honors
